@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div v-if="selectedObj" class="properties">
     <h3>{{ selectedObj.category }} ({{ selectedObj.primitive }})</h3>
     <div v-if="selectedObj.category === 'force'">
@@ -14,10 +14,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import type { PropType } from 'vue'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 
-const props = defineProps<{ sceneObjects: ReturnType<typeof useSceneObjects> }>()
+const props = defineProps({
+  sceneObjects: Object as PropType<ReturnType<typeof useSceneObjects> | null>,
+})
 const selectedObj = computed(() => {
+  if (!props || !props.sceneObjects) return null
   const id = props.sceneObjects.selectedId.value
   return props.sceneObjects.objects.value.find((o) => o.id === id)
 })
@@ -37,4 +41,4 @@ const editDirection = () => {
   color: white;
   z-index: 20;
 }
-</style>
+</style> -->

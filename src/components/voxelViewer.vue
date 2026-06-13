@@ -1,9 +1,10 @@
 <template>
-  <div ref="containerRef" class="viewer"></div>
+  <div ref="containerRef" class="viewer" @mousedown="onMouseDown" @click="onCanvasClick"></div>
 </template>
 
 <script setup lang="ts">
 import { ref, shallowRef, onMounted, watch, onUnmounted } from 'vue'
+import type { ShallowRef } from 'vue'
 import { useOptimization } from '@/composables/useOptimization'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
@@ -13,7 +14,32 @@ const props = defineProps<{
   nely: number
   nelz: number
   threshold: number
+  supportMask: Uint8Array | null
+  obstacleMask: Uint8Array | null
+  forceMask: Uint8Array | null
 }>()
+
+const emit = defineEmits(['canvasClick'])
+const dragThreshold = 4 //pixels
+
+function onCanvasClick(event: MouseEvent) {
+  //filter drag events
+  const dx = event.clientX - downPos.value.x
+  const dy = event.clientY - downPos.value.y
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  if (dist > dragThreshold) return
+
+  const rect = containerRef.value?.getBoundingClientRect()
+  if (!rect) return
+  const mouseX = event.clientX - rect.left
+  const mouseY = event.clientY - rect.top
+  emit('canvasClick', mouseX, mouseY)
+}
+
+const downPos = ref({ x: 0, y: 0 })
+function onMouseDown(event: MouseEvent) {
+  downPos.value = { x: event.clientX, y: event.clientY }
+}
 
 const containerRef = ref<HTMLDivElement>()
 const { latestDensityData } = useOptimization()
@@ -23,11 +49,17 @@ const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)
 const renderer = shallowRef<THREE.WebGLRenderer | null>(null)
 const orbitControls = shallowRef<OrbitControls | null>(null)
-defineExpose({ scene, camera, renderer, orbitControls })
-let instancedMesh: THREE.InstancedMesh | null = null
+defineExpose({ scene, camera, renderer, orbitControls, clear })
+
+const iterationsMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const voxelFieldMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const supportsMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const obstaclesMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const forcesMesh = shallowRef<THREE.InstancedMesh | null>(null)
 
 //pre-build a unit cube geometry
 const boxGeometry = new THREE.BoxGeometry(0.99, 0.99, 0.99)
+const miniBoxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1)
 const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd })
 
 function updateVoxels(densityData: Uint8Array) {
@@ -40,6 +72,7 @@ function updateVoxels(densityData: Uint8Array) {
   const positions: THREE.Vector3[] = []
 
   let idx = 0
+  //returning values from pytopo3d are in y,x,z order
   for (let y = 0; y < nely; y++) {
     for (let x = 0; x < nelx; x++) {
       for (let z = 0; z < nelz; z++) {
@@ -51,25 +84,113 @@ function updateVoxels(densityData: Uint8Array) {
     }
   }
 
-  //remove old mesh if it exists
-  if (instancedMesh) {
-    instancedMesh.dispose()
-    scene.value?.remove(instancedMesh)
-    instancedMesh = null
+  instantiateVoxels(iterationsMesh, boxGeometry, material, positions)
+
+  // //remove old mesh if it exists
+  // if (instancedMesh) {
+  //   instancedMesh.dispose()
+  //   scene.value?.remove(instancedMesh)
+  //   instancedMesh = null
+  // }
+
+  // if (positions.length == 0) return
+
+  // //create new instancedMesh
+  // instancedMesh = new THREE.InstancedMesh(boxGeometry, material, positions.length)
+  // positions.forEach((pos, i) => {
+  //   const m = new THREE.Matrix4()
+  //   m.setPosition(pos.x, pos.y, pos.z)
+  //   instancedMesh?.setMatrixAt(i, m)
+  // })
+
+  // instancedMesh.instanceMatrix.needsUpdate = true
+  // scene.value?.add(instancedMesh)
+}
+
+//clear all preview voxels from scene
+function clear() {
+  removeMesh(iterationsMesh)
+  removeMesh(supportsMesh)
+  removeMesh(obstaclesMesh)
+  removeMesh(forcesMesh)
+}
+
+function removeMesh(mesh: ShallowRef<THREE.InstancedMesh | null>) {
+  if (!mesh.value) return
+  mesh.value.dispose()
+  scene.value?.remove(mesh.value)
+  mesh.value = null
+}
+
+function instantiateVoxels(
+  mesh: ShallowRef<THREE.InstancedMesh | null>,
+  prefab: THREE.BoxGeometry,
+  material: THREE.MeshStandardMaterial,
+  positions: THREE.Vector3[],
+) {
+  if (mesh.value) {
+    mesh.value.dispose()
+    scene.value?.remove(mesh.value)
+    mesh.value = null
   }
-
-  if (positions.length == 0) return
-
-  //create new instancedMesh
-  instancedMesh = new THREE.InstancedMesh(boxGeometry, material, positions.length)
+  mesh.value = new THREE.InstancedMesh(prefab, material, positions.length)
   positions.forEach((pos, i) => {
     const m = new THREE.Matrix4()
     m.setPosition(pos.x, pos.y, pos.z)
-    instancedMesh?.setMatrixAt(i, m)
+    mesh.value?.setMatrixAt(i, m)
   })
 
-  instancedMesh.instanceMatrix.needsUpdate = true
-  scene.value?.add(instancedMesh)
+  mesh.value.instanceMatrix.needsUpdate = true
+  scene.value?.add(mesh.value)
+}
+
+function updateObjectVoxels(voxelMask: Uint8Array, type: string) {
+  const { nelx, nely, nelz } = props
+  const positions: THREE.Vector3[] = []
+
+  let idx = 0
+  for (let x = 0; x < nelx; x++) {
+    for (let y = 0; y < nely; y++) {
+      for (let z = 0; z < nelz; z++) {
+        const byteVal = voxelMask[idx++]
+        if (byteVal === 0) continue
+        positions.push(new THREE.Vector3(x, y, z))
+      }
+    }
+  }
+
+  let refMesh: ShallowRef<THREE.InstancedMesh | null>
+  switch (type) {
+    case 'support':
+      refMesh = supportsMesh
+      break
+    case 'obstacle':
+      refMesh = obstaclesMesh
+      break
+    case 'force':
+      refMesh = forcesMesh
+      break
+    default:
+      console.error('unrecognized object type to visualize with voxels')
+      return
+  }
+
+  instantiateVoxels(refMesh, boxGeometry, material, positions)
+}
+
+function updateVoxelField() {
+  const { nelx, nely, nelz } = props
+  const positions: THREE.Vector3[] = []
+
+  for (let x = 0; x < nelx; x++) {
+    for (let y = 0; y < nely; y++) {
+      for (let z = 0; z < nelz; z++) {
+        positions.push(new THREE.Vector3(x, y, z))
+      }
+    }
+  }
+
+  instantiateVoxels(voxelFieldMesh, miniBoxGeometry, material, positions)
 }
 
 watch(latestDensityData, (newData) => {
@@ -77,6 +198,40 @@ watch(latestDensityData, (newData) => {
     updateVoxels(newData)
   }
 })
+
+watch(
+  () => props.supportMask,
+  (newData) => {
+    if (newData) {
+      updateObjectVoxels(newData, 'support')
+    }
+  },
+)
+
+watch(
+  () => props.obstacleMask,
+  (newData) => {
+    if (newData) {
+      updateObjectVoxels(newData, 'obstacle')
+    }
+  },
+)
+
+watch(
+  () => props.forceMask,
+  (newData) => {
+    if (newData) {
+      updateObjectVoxels(newData, 'force')
+    }
+  },
+)
+
+watch(
+  () => [props.nelx, props.nely, props.nelz],
+  () => {
+    updateVoxelField()
+  },
+)
 
 // //if dims change while viewer is active, reset camera or do nothing
 // watch(
@@ -124,6 +279,8 @@ onMounted(() => {
   containerRef.value.appendChild(renderer.value.domElement)
 
   orbitControls.value = new OrbitControls(camera.value, renderer.value.domElement)
+
+  updateVoxelField()
 
   // //create empty geometry
   // geometry = new THREE.BufferGeometry()

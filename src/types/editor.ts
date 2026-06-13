@@ -7,9 +7,6 @@ export interface EditorObject {
   id: string
   category: ObjectCategory
   primitive: PrimitiveType
-  position: THREE.Vector3
-  rotation: THREE.Euler
-  scale: THREE.Vector3
-  magnitude?: number
-  directionRotation?: THREE.Euler
+  transform: THREE.Matrix4
+  forceVector?: THREE.Vector3 //required for force objects
 }

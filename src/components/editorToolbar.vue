@@ -24,10 +24,13 @@
 
 <script setup lang="ts">
 import { useSceneObjects } from '@/composables/useSceneObjects'
+import type { PropType } from 'vue'
 import type { ObjectCategory, PrimitiveType } from '@/types/editor'
 
-const props = defineProps<{ sceneObjects: ReturnType<typeof useSceneObjects> }>()
-const { addObject, removeObject, selectedId } = props.sceneObjects
+const props = defineProps({
+  sceneObjects: Object as PropType<ReturnType<typeof useSceneObjects> | null>,
+})
+const { addObject, removeObject, selectedId } = props.sceneObjects!
 
 const add = (category: ObjectCategory, primitive: PrimitiveType) => {
   addObject(category, primitive)

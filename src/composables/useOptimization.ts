@@ -6,6 +6,8 @@ const queuePosition = ref<number | null>(null)
 const isStarting = ref(false)
 const error = ref<string | null>(null)
 const latestDensityData = ref<Uint8Array | null>(null)
+const latestStlData = ref<ArrayBuffer | null>(null)
+let expectingStl = false
 
 export function useOptimization() {
   const connect = (params: Record<string, unknown>) => {
@@ -30,6 +32,7 @@ export function useOptimization() {
     queuePosition.value = null
     isStarting.value = false
     latestDensityData.value = null
+    latestStlData.value = null
 
     //open the new connection
     ws.value = new WebSocket('ws://localhost:8000/ws')
@@ -46,20 +49,32 @@ export function useOptimization() {
         if (msg.status === 'queued') queuePosition.value = msg.position
         else if (msg.status === 'starting') {
           isStarting.value = true
+          expectingStl = false
           status.value = 'running'
         } else if (msg.status === 'complete') {
           status.value = 'complete'
           isStarting.value = false
-          // The backend will close the WebSocket soon; onclose will set status to disconnected
+          if (msg.has_stl) {
+            expectingStl = true
+          } else {
+            ws.value?.close()
+          }
         } else if (msg.status === 'error') {
           error.value = msg.message
           status.value = 'error'
           ws.value?.close()
         }
       } else {
-        //binary data received, should be the density field
-        const densityArray = new Uint8Array(event.data)
-        latestDensityData.value = densityArray
+        if (expectingStl) {
+          const stlArrayBuffer = event.data
+          latestStlData.value = stlArrayBuffer
+          expectingStl = false
+          ws.value?.close()
+        } else {
+          //binary data received, should be the density field
+          const densityArray = new Uint8Array(event.data)
+          latestDensityData.value = densityArray
+        }
       }
     }
 
@@ -88,5 +103,14 @@ export function useOptimization() {
     }
   }
 
-  return { status, queuePosition, isStarting, error, connect, stop, latestDensityData }
+  return {
+    status,
+    queuePosition,
+    isStarting,
+    error,
+    connect,
+    stop,
+    latestDensityData,
+    latestStlData,
+  }
 }

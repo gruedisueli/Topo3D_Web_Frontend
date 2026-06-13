@@ -44,6 +44,7 @@
       <button @click="triggerFilePicker">Select STL File</button>
       <span v-if="uploadedStlName">{{ uploadedStlName }} (uploaded)</span>
     </div>
+    <button @click="voxelize">Voxelize</button>
     <button @click="start" :disabled="isStarting || status === 'running'">Start</button>
     <button @click="stop" :disabled="!isStarting && status !== 'running'">Stop</button>
   </div>
@@ -54,6 +55,7 @@ import { reactive, watch, ref } from 'vue'
 import { useOptimization } from '@/composables/useOptimization'
 
 const emit = defineEmits<{
+  (e: 'voxelize'): void
   (e: 'start', params: Record<string, unknown>): void
   (e: 'stop'): void
   (e: 'update:dimensions', dims: { nelx: number; nely: number; nelz: number }): void
@@ -75,9 +77,6 @@ const user_params = reactive({
   maxloop: 200,
   pitch: 1.0,
   invert_design_space: false,
-  obstacles: null,
-  supports: null,
-  forces: null,
 })
 
 const stlInput = ref<HTMLInputElement | null>(null)
@@ -143,6 +142,10 @@ async function uploadSTL(file: File): Promise<string> {
   return stl_id
 }
 
+function voxelize() {
+  emit('voxelize')
+}
+
 function start() {
   emit('start', {
     nelx: localNelx.value,
@@ -154,11 +157,8 @@ function start() {
     tolx: user_params.tolx,
     maxloop: user_params.maxloop,
     pitch: user_params.pitch,
-    //invert_design_space: user_params.invert_design_space,
-    //design_space_stl_id: uploadedStlId.value,
-    //obstacles: user_params.obstacles,
-    //supports: user_params.supports,
-    //forces: user_params.forces,
+    invert_design_space: user_params.invert_design_space,
+    design_space_stl_id: uploadedStlId.value,
   })
 }
 
