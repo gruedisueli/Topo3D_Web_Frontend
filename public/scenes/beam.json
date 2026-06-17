@@ -1,0 +1,32 @@
+{
+  "name": "Beam",
+  "description": "A beam with supports on either end and a constant load across the top",
+  "nelx": 64,
+  "nely": 8,
+  "nelz": 8,
+  "volfrac": 0.3,
+  "penal": 3.0,
+  "rmin": 1.5,
+  "tolx": 0.01,
+  "maxloop": 200,
+  "pitch": 1.0,
+  "invert_design_space": false,
+  "objects": [
+    {
+      "category": "support",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 8, 0, 63, 0, 3.5, 1]
+    },
+    {
+      "category": "support",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 8, 0, 0, 0, 3.5, 1]
+    },
+    {
+      "category": "force",
+      "primitive": "cube",
+      "transform": [64, 0, 0, 0, 0, 2, 0, 0, 0, 0, 8, 0, 31.5, 8, 3.5, 1],
+      "forceVector": [0, -1, 0]
+    }
+  ]
+}

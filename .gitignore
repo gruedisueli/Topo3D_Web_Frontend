@@ -37,3 +37,7 @@ __screenshots__/
 
 # Vite
 *.timestamp-*-*.mjs
+
+#Rhino
+*.3dmbak
+*.stlbak

@@ -17,6 +17,7 @@
   "dependencies": {
     "@types/three": "^0.184.1",
     "three": "^0.184.0",
+    "three-mesh-bvh": "^0.9.10",
     "vue": "^3.5.32"
   },
   "devDependencies": {

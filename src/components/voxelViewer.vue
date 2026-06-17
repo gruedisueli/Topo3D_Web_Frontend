@@ -8,6 +8,7 @@ import type { ShallowRef } from 'vue'
 import { useOptimization } from '@/composables/useOptimization'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
+import { ForcePoint } from '@/workers/voxelWorker'
 
 const props = defineProps<{
   nelx: number
@@ -16,7 +17,8 @@ const props = defineProps<{
   threshold: number
   supportMask: Uint8Array | null
   obstacleMask: Uint8Array | null
-  forceMask: Uint8Array | null
+  meshMask: Uint8Array | null
+  forcePoints: ForcePoint[] | null
 }>()
 
 const emit = defineEmits(['canvasClick'])
@@ -55,10 +57,12 @@ const iterationsMesh = shallowRef<THREE.InstancedMesh | null>(null)
 const voxelFieldMesh = shallowRef<THREE.InstancedMesh | null>(null)
 const supportsMesh = shallowRef<THREE.InstancedMesh | null>(null)
 const obstaclesMesh = shallowRef<THREE.InstancedMesh | null>(null)
-const forcesMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const meshMesh = shallowRef<THREE.InstancedMesh | null>(null)
+const forceArrows: THREE.ArrowHelper[] = []
 
 //pre-build a unit cube geometry
 const boxGeometry = new THREE.BoxGeometry(0.99, 0.99, 0.99)
+const iterationBoxGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75)
 const miniBoxGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1)
 const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd })
 
@@ -70,6 +74,7 @@ function updateVoxels(densityData: Uint8Array) {
     return
   }
   const positions: THREE.Vector3[] = []
+  //const materials: THREE.MeshStandardMaterial[] = []
 
   let idx = 0
   //returning values from pytopo3d are in y,x,z order
@@ -79,32 +84,14 @@ function updateVoxels(densityData: Uint8Array) {
         const byteVal = densityData[idx++]
         const density = byteVal! / 255
         if (density < threshold) continue
-        positions.push(new THREE.Vector3(x, y, z))
+        positions.push(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5))
+        //const color = new THREE.Color(density, 0, 1 - density)
+        //materials.push(new THREE.MeshStandardMaterial({ color: color }))
       }
     }
   }
 
-  instantiateVoxels(iterationsMesh, boxGeometry, material, positions)
-
-  // //remove old mesh if it exists
-  // if (instancedMesh) {
-  //   instancedMesh.dispose()
-  //   scene.value?.remove(instancedMesh)
-  //   instancedMesh = null
-  // }
-
-  // if (positions.length == 0) return
-
-  // //create new instancedMesh
-  // instancedMesh = new THREE.InstancedMesh(boxGeometry, material, positions.length)
-  // positions.forEach((pos, i) => {
-  //   const m = new THREE.Matrix4()
-  //   m.setPosition(pos.x, pos.y, pos.z)
-  //   instancedMesh?.setMatrixAt(i, m)
-  // })
-
-  // instancedMesh.instanceMatrix.needsUpdate = true
-  // scene.value?.add(instancedMesh)
+  instantiateVoxels(iterationsMesh, iterationBoxGeometry, material.clone(), positions)
 }
 
 //clear all preview voxels from scene
@@ -112,12 +99,18 @@ function clear() {
   removeMesh(iterationsMesh)
   removeMesh(supportsMesh)
   removeMesh(obstaclesMesh)
-  removeMesh(forcesMesh)
+  removeMesh(meshMesh)
+  clearArrows()
 }
 
 function removeMesh(mesh: ShallowRef<THREE.InstancedMesh | null>) {
   if (!mesh.value) return
   mesh.value.dispose()
+  if (Array.isArray(mesh.value.material)) {
+    mesh.value.material.forEach((m) => m.dispose())
+  } else {
+    mesh.value.material?.dispose()
+  }
   scene.value?.remove(mesh.value)
   mesh.value = null
 }
@@ -125,7 +118,7 @@ function removeMesh(mesh: ShallowRef<THREE.InstancedMesh | null>) {
 function instantiateVoxels(
   mesh: ShallowRef<THREE.InstancedMesh | null>,
   prefab: THREE.BoxGeometry,
-  material: THREE.MeshStandardMaterial,
+  materials: THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[],
   positions: THREE.Vector3[],
 ) {
   if (mesh.value) {
@@ -133,7 +126,7 @@ function instantiateVoxels(
     scene.value?.remove(mesh.value)
     mesh.value = null
   }
-  mesh.value = new THREE.InstancedMesh(prefab, material, positions.length)
+  mesh.value = new THREE.InstancedMesh(prefab, materials, positions.length)
   positions.forEach((pos, i) => {
     const m = new THREE.Matrix4()
     m.setPosition(pos.x, pos.y, pos.z)
@@ -154,28 +147,54 @@ function updateObjectVoxels(voxelMask: Uint8Array, type: string) {
       for (let z = 0; z < nelz; z++) {
         const byteVal = voxelMask[idx++]
         if (byteVal === 0) continue
-        positions.push(new THREE.Vector3(x, y, z))
+        positions.push(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5))
       }
     }
   }
 
-  let refMesh: ShallowRef<THREE.InstancedMesh | null>
   switch (type) {
     case 'support':
-      refMesh = supportsMesh
+      instantiateVoxels(supportsMesh, boxGeometry, material.clone(), positions)
       break
     case 'obstacle':
-      refMesh = obstaclesMesh
+      instantiateVoxels(obstaclesMesh, boxGeometry, material.clone(), positions)
       break
-    case 'force':
-      refMesh = forcesMesh
+    case 'mesh':
+      instantiateVoxels(meshMesh, boxGeometry, material.clone(), positions)
       break
     default:
       console.error('unrecognized object type to visualize with voxels')
       return
   }
+}
 
-  instantiateVoxels(refMesh, boxGeometry, material, positions)
+function updateForceArrows() {
+  clearArrows()
+  if (!props.forcePoints) return
+  for (const force of props.forcePoints) {
+    const fV = new THREE.Vector3(force.vector[0], force.vector[1], force.vector[2])
+    const length = fV.length()
+    fV.normalize()
+    const pos = indexToXyz(force.index)
+    pos.add(new THREE.Vector3(0.5, 0.5, 0.5))
+    const arrow = new THREE.ArrowHelper(fV, pos, length, 0xff0000)
+    scene.value?.add(arrow)
+    forceArrows.push(arrow)
+  }
+}
+
+function clearArrows() {
+  for (const arrow of forceArrows) {
+    scene.value?.remove(arrow)
+  }
+}
+
+function indexToXyz(index: number): THREE.Vector3 {
+  const { nely, nelz } = props
+  const z = index % nelz
+  const y = Math.floor(index / nelz) % nely
+  const x = Math.floor(index / (nely * nelz))
+  return new THREE.Vector3(x, y, z)
 }
 
 function updateVoxelField() {
@@ -185,12 +204,12 @@ function updateVoxelField() {
   for (let x = 0; x < nelx; x++) {
     for (let y = 0; y < nely; y++) {
       for (let z = 0; z < nelz; z++) {
-        positions.push(new THREE.Vector3(x, y, z))
+        positions.push(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5))
       }
     }
   }
 
-  instantiateVoxels(voxelFieldMesh, miniBoxGeometry, material, positions)
+  instantiateVoxels(voxelFieldMesh, miniBoxGeometry, material.clone(), positions)
 }
 
 watch(latestDensityData, (newData) => {
@@ -202,27 +221,28 @@ watch(latestDensityData, (newData) => {
 watch(
   () => props.supportMask,
   (newData) => {
-    if (newData) {
-      updateObjectVoxels(newData, 'support')
-    }
+    if (newData) updateObjectVoxels(newData, 'support')
   },
 )
 
 watch(
   () => props.obstacleMask,
   (newData) => {
-    if (newData) {
-      updateObjectVoxels(newData, 'obstacle')
-    }
+    if (newData) updateObjectVoxels(newData, 'obstacle')
   },
 )
 
 watch(
-  () => props.forceMask,
+  () => props.meshMask,
   (newData) => {
-    if (newData) {
-      updateObjectVoxels(newData, 'force')
-    }
+    if (newData) updateObjectVoxels(newData, 'mesh')
+  },
+)
+
+watch(
+  () => props.forcePoints,
+  () => {
+    updateForceArrows()
   },
 )
 
@@ -273,6 +293,9 @@ onMounted(() => {
   const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0)
   directionalLight.position.set(5, 10, 7) // Position the light in 3D space
   scene.value.add(directionalLight)
+  // add axes helper
+  const axesHelper = new THREE.AxesHelper(5)
+  scene.value.add(axesHelper)
 
   renderer.value = new THREE.WebGLRenderer()
   renderer.value.setSize(containerRef.value.clientWidth, containerRef.value.clientHeight)

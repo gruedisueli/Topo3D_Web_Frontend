@@ -1,0 +1,27 @@
+{
+  "name": "Cantilever",
+  "description": "A cantilever beam with support at one end and a downward force at the other.",
+  "nelx": 32,
+  "nely": 8,
+  "nelz": 8,
+  "volfrac": 0.3,
+  "penal": 3.0,
+  "rmin": 1.5,
+  "tolx": 0.01,
+  "maxloop": 200,
+  "pitch": 1.0,
+  "invert_design_space": false,
+  "objects": [
+    {
+      "category": "support",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 8, 0, 0, 0, 0, 8, 0, 0, 4, 4, 1]
+    },
+    {
+      "category": "force",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 8, 0, 31, 0, 4, 1],
+      "forceVector": [0, -1, 0]
+    }
+  ]
+}

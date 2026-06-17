@@ -1,0 +1,37 @@
+{
+  "name": "Bridge",
+  "description": "A bridge with supports on either end and a constant load across the top, with an obstacle added for the road",
+  "nelx": 128,
+  "nely": 16,
+  "nelz": 16,
+  "volfrac": 0.3,
+  "penal": 3.0,
+  "rmin": 1.5,
+  "tolx": 0.01,
+  "maxloop": 200,
+  "pitch": 1.0,
+  "invert_design_space": false,
+  "objects": [
+    {
+      "category": "support",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 127, 0, 7.5, 1]
+    },
+    {
+      "category": "support",
+      "primitive": "cube",
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 0, 0, 7.5, 1]
+    },
+    {
+      "category": "obstacle",
+      "primitive": "cube",
+      "transform": [140, 0, 0, 0, 0, 10, 0, 0, 0, 0, 10, 0, 63.5, 6.5, 7.5, 1]
+    },
+    {
+      "category": "force",
+      "primitive": "cube",
+      "transform": [120, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 63.5, 0, 7.5, 1],
+      "forceVector": [0, -1, 0]
+    }
+  ]
+}

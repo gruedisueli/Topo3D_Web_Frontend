@@ -6,6 +6,7 @@ const queuePosition = ref<number | null>(null)
 const isStarting = ref(false)
 const error = ref<string | null>(null)
 const latestDensityData = ref<Uint8Array | null>(null)
+const iterationCt = ref(0)
 const latestStlData = ref<ArrayBuffer | null>(null)
 let expectingStl = false
 
@@ -49,11 +50,13 @@ export function useOptimization() {
         if (msg.status === 'queued') queuePosition.value = msg.position
         else if (msg.status === 'starting') {
           isStarting.value = true
+          iterationCt.value = 0
           expectingStl = false
           status.value = 'running'
         } else if (msg.status === 'complete') {
           status.value = 'complete'
           isStarting.value = false
+          iterationCt.value = 0
           if (msg.has_stl) {
             expectingStl = true
           } else {
@@ -62,6 +65,7 @@ export function useOptimization() {
         } else if (msg.status === 'error') {
           error.value = msg.message
           status.value = 'error'
+          iterationCt.value = 0
           ws.value?.close()
         }
       } else {
@@ -74,6 +78,7 @@ export function useOptimization() {
           //binary data received, should be the density field
           const densityArray = new Uint8Array(event.data)
           latestDensityData.value = densityArray
+          iterationCt.value += 1
         }
       }
     }
@@ -112,5 +117,6 @@ export function useOptimization() {
     stop,
     latestDensityData,
     latestStlData,
+    iterationCt,
   }
 }

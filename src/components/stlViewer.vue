@@ -19,7 +19,7 @@ const props = defineProps({
   renderer: Object as PropType<THREE.WebGLRenderer | null>,
 })
 
-defineExpose({ clear })
+defineExpose({ clear, stlMesh })
 
 watch(latestStlData, (stlBuffer) => {
   clear()
