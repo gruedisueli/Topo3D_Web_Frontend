@@ -1,5 +1,5 @@
 import { ref, shallowRef } from 'vue'
-import type { Ref } from 'vue'
+import type { Ref, ShallowRef } from 'vue'
 import * as THREE from 'three'
 import {
   TransformControls,
@@ -10,16 +10,17 @@ import { OrbitControls } from 'three/examples/jsm/Addons.js'
 import type { SavedScene } from '@/types/scene'
 
 export function useSceneObjects(
-  scene: THREE.Scene,
-  camera: THREE.Camera,
-  renderer: THREE.WebGLRenderer,
-  orbitControls: OrbitControls,
+  scene: ShallowRef<THREE.Scene | null>,
+  camera: ShallowRef<THREE.Camera | null>,
+  renderer: ShallowRef<THREE.WebGLRenderer | null>,
+  orbitControls: ShallowRef<OrbitControls | null>,
   nelx: Ref<number | null>,
   nely: Ref<number | null>,
   nelz: Ref<number | null>,
 ) {
   const objects = ref<EditorObject[]>([])
   const selectedId = ref<string | null>(null)
+  const selectedObj = ref<EditorObject | null>(null)
   const selectedMesh = shallowRef<THREE.Object3D | null>(null)
   const directionArrow = shallowRef<THREE.ArrowHelper | null>(null)
   let activeControls: TransformControls | null = null
@@ -57,7 +58,15 @@ export function useSceneObjects(
     }
     const material = new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.6 })
     const mesh = new THREE.Mesh(geometry, material)
-    mesh.userData = { id: obj.id, category: obj.category, primitive: obj.primitive }
+    mesh.userData = {
+      id: obj.id,
+      category: obj.category,
+      primitive: obj.primitive,
+      //additional properties to track emissivity for hover behavior
+      originalEmissiveHex: material.emissive.getHex(),
+      originalEmissiveIntensity: material.emissiveIntensity,
+      originalColor: material.emissive.clone(),
+    }
     mesh.applyMatrix4(obj.transform)
     return mesh
   }
@@ -76,11 +85,11 @@ export function useSceneObjects(
     }
     objects.value.push(obj)
     const mesh = createMesh(obj)
-    scene.add(mesh)
+    scene?.value?.add(mesh)
     if (category === 'force') {
       const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), pos, 1, 0xff0000)
       arrow.userData = { parentId: id, type: 'direction' }
-      scene.add(arrow)
+      scene?.value?.add(arrow)
       directionArrow.value = arrow
     }
     selectObject(id)
@@ -107,11 +116,11 @@ export function useSceneObjects(
     }
     objects.value.push(obj)
     const mesh = createMesh(obj)
-    scene.add(mesh)
+    scene?.value?.add(mesh)
     if (category === 'force') {
       const arrow = new THREE.ArrowHelper(fV, mesh.position, fV.length(), 0xff0000)
       arrow.userData = { parentId: id, type: 'direction' }
-      scene.add(arrow)
+      scene?.value?.add(arrow)
       directionArrow.value = arrow
     }
     if (autoSelect) selectObject(id)
@@ -121,16 +130,16 @@ export function useSceneObjects(
   function removeObject(id: string) {
     const obj = objects.value.find((o) => o.id === id)
     if (!obj) return
-    const mesh = scene.children.find((c) => c.userData?.id === id)
+    const mesh = scene?.value?.children.find((c) => c.userData?.id === id)
     if (mesh) {
       ;(mesh as THREE.Mesh)?.geometry.dispose()
-      scene.remove(mesh)
+      scene?.value?.remove(mesh)
     }
     if (obj.category === 'force') {
-      const arrow = scene.children.find(
+      const arrow = scene?.value?.children.find(
         (c) => c.userData?.parentId === id && c.userData?.type === 'direction',
       )
-      if (arrow) scene.remove(arrow)
+      if (arrow) scene?.value?.remove(arrow)
     }
     objects.value = objects.value.filter((o) => o.id !== id)
     if (selectedId.value === id) selectObject(null)
@@ -146,35 +155,38 @@ export function useSceneObjects(
       directionArrow.value = null
       return
     }
-    const mesh = scene.children.find((c) => c.userData?.id === id) as THREE.Mesh
+    const mesh = scene?.value?.children.find((c) => c.userData?.id === id) as THREE.Mesh
     if (!mesh) return
     selectedMesh.value = mesh
     if (mesh.userData.category === 'force') {
-      const arrow = scene.children.find(
+      const arrow = scene?.value?.children.find(
         (c) => c.userData?.parentId === id && c.userData?.type === 'direction',
       )
       if (arrow) {
         directionArrow.value = arrow as THREE.ArrowHelper
       }
     }
+    selectedObj.value = objects.value.find((o) => o.id === id) as EditorObject
   }
 
   function removeControls() {
     if (activeControls === null) return
-    scene.remove(activeControls.getHelper())
+    scene?.value?.remove(activeControls.getHelper())
     activeControls.dispose()
     activeControls = null
   }
 
   function pickObject(mouseX: number, mouseY: number) {
+    console.log('picking')
+    if (!renderer?.value || !camera?.value) return
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
-    mouse.x = (mouseX / renderer.domElement.clientWidth) * 2 - 1
-    mouse.y = -(mouseY / renderer.domElement.clientHeight) * 2 + 1
-    raycaster.setFromCamera(mouse, camera)
+    mouse.x = mouseX // (mouseX / renderer.value.domElement.clientWidth) * 2 - 1
+    mouse.y = mouseY //-(mouseY / renderer.value.domElement.clientHeight) * 2 + 1
+    raycaster.setFromCamera(mouse, camera.value)
     const selectableObjs: THREE.Object3D[] = []
     objects.value.forEach((o) => {
-      const mesh = scene.children.find((c) => c.userData?.id === o.id) as THREE.Mesh
+      const mesh = scene?.value?.children.find((c) => c.userData?.id === o.id) as THREE.Mesh
       if (!mesh) return
       selectableObjs.push(mesh)
     })
@@ -188,6 +200,7 @@ export function useSceneObjects(
   }
 
   function showTransformControls(mode: string | null) {
+    if (!camera?.value || !renderer?.value) return
     removeControls()
     if (mode === null) return
     if (!selectedMesh.value || !selectedId.value) return
@@ -198,7 +211,7 @@ export function useSceneObjects(
     else if (mode.includes('rotate')) tMode = 'rotate'
     else tMode = 'scale'
 
-    activeControls = new TransformControls(camera, renderer.domElement)
+    activeControls = new TransformControls(camera.value, renderer.value.domElement)
     activeControls.setMode(tMode as TransformControlsMode)
     activeControls.translationSnap = 1
     activeControls.rotationSnap = Math.PI / 16
@@ -213,7 +226,7 @@ export function useSceneObjects(
       // if (event.value && activeControls) {
       //   prevInvRot = activeControls.object.quaternion.clone().invert()
       // }
-      orbitControls.enabled = !event.value
+      if (orbitControls.value) orbitControls.value.enabled = !event.value
       isDragging.value = event.value as boolean
       if (!event.value) {
         // //adjust the direction arrow the amount of the parent's rotation
@@ -229,7 +242,7 @@ export function useSceneObjects(
       if (!directionArrow.value || !selectedMesh.value) return
       directionArrow.value!.position.copy(selectedMesh.value.position)
     })
-    scene.add(activeControls.getHelper())
+    scene?.value?.add(activeControls.getHelper())
   }
 
   //update object transform from mesh (call after transform controls update)
@@ -287,6 +300,7 @@ export function useSceneObjects(
     objects,
     selectedId,
     selectedMesh,
+    selectedObj,
     addObject,
     removeObject,
     selectObject,

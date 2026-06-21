@@ -11,6 +11,16 @@ const latestStlData = ref<ArrayBuffer | null>(null)
 let expectingStl = false
 
 export function useOptimization() {
+  function reset() {
+    //reset state
+    error.value = null
+    status.value = 'disconnected'
+    queuePosition.value = null
+    isStarting.value = false
+    latestDensityData.value = null
+    latestStlData.value = null
+  }
+
   const connect = (params: Record<string, unknown>) => {
     //prevent multiple connections
     if (
@@ -27,13 +37,9 @@ export function useOptimization() {
       ws.value = null
     }
 
-    //reset state
-    error.value = null
+    reset()
+
     status.value = 'connecting'
-    queuePosition.value = null
-    isStarting.value = false
-    latestDensityData.value = null
-    latestStlData.value = null
 
     //open the new connection
     ws.value = new WebSocket('ws://localhost:8000/ws')
@@ -47,8 +53,10 @@ export function useOptimization() {
     ws.value.onmessage = (event) => {
       if (typeof event.data === 'string') {
         const msg = JSON.parse(event.data)
-        if (msg.status === 'queued') queuePosition.value = msg.position
-        else if (msg.status === 'starting') {
+        if (msg.status === 'queued') {
+          queuePosition.value = msg.position
+          status.value = 'queued'
+        } else if (msg.status === 'starting') {
           isStarting.value = true
           iterationCt.value = 0
           expectingStl = false
@@ -109,6 +117,7 @@ export function useOptimization() {
   }
 
   return {
+    reset,
     status,
     queuePosition,
     isStarting,
