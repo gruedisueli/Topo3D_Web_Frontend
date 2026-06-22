@@ -8,6 +8,7 @@ import glsl from 'vite-plugin-glsl'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), glsl()],
+  base: '/Web3dStructuralTopologyOpt/',
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
