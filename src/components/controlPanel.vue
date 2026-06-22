@@ -316,7 +316,7 @@ const addRemoveTabOpen = ref<boolean>(true)
 onMounted(async () => {
   const loaded = []
   for (const file of sceneFiles) {
-    const res = await fetch(`/scenes/${file}.json`)
+    const res = await fetch(`./scenes/${file}.json`)
     const data = await res.json()
     loaded.push({ name: data.name, data: data })
   }
@@ -358,7 +358,7 @@ function resetScalingMatrix() {
 //loads STL file saved in public folder
 async function loadStlFile(fileName: string): Promise<File | null> {
   try {
-    const res = await fetch(`/models/${fileName}.stl`)
+    const res = await fetch(`./models/${fileName}.stl`)
     if (!res.ok) {
       console.error(`Failed to fetch STL file: ${res.statusText}`)
       return null
