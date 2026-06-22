@@ -23,11 +23,23 @@ export function useSceneObjects(
   const selectedObj = ref<EditorObject | null>(null)
   const selectedMesh = shallowRef<THREE.Object3D | null>(null)
   const directionArrow = shallowRef<THREE.ArrowHelper | null>(null)
+  const forceSelectablePrefab = new THREE.Group()
+  const stem = new THREE.CylinderGeometry(0.2, 0.2, 10)
+  stem.translate(0, 5, 0)
+  const head = new THREE.ConeGeometry(0.5, 1)
+  head.translate(0, 10, 0)
+  const arrMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  forceSelectablePrefab.add(new THREE.Mesh(stem, arrMat))
+  forceSelectablePrefab.add(new THREE.Mesh(head, arrMat))
+  forceSelectablePrefab.visible = false
+  scene.value?.add(forceSelectablePrefab)
   let activeControls: TransformControls | null = null
   const isDragging = ref<boolean>(false)
   const nx = nelx
   const ny = nely
   const nz = nelz
+  const forceColor = 0xff0000
+  const wireframeColor = 0xffffff
   //let prevInvRot = new THREE.Quaternion()
 
   //Helper to create a mesh from EditorObject
@@ -50,14 +62,14 @@ export function useSceneObjects(
         color = 0x00ff00
         break
       case 'force':
-        color = 0xff0000
+        color = forceColor
         break
       case 'obstacle':
         color = 0x0088ff
         break
     }
     const material = new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.6 })
-    const mesh = new THREE.Mesh(geometry, material)
+    const mesh = new THREE.Mesh(geometry, material.clone())
     mesh.userData = {
       id: obj.id,
       category: obj.category,
@@ -71,6 +83,16 @@ export function useSceneObjects(
     return mesh
   }
 
+  function changeSelectedPrimitive(primitive: PrimitiveType) {
+    if (!selectedId.value || !selectedMesh.value || !selectedObj.value) return
+    selectedObj.value.primitive = primitive
+    const pos = selectedMesh.value.position.clone()
+    const id = selectedId.value
+    selectObject(null)
+    removeMesh(id)
+    addMesh(selectedObj.value, pos)
+  }
+
   function addObject(category: ObjectCategory, primitive: PrimitiveType, position?: THREE.Vector3) {
     const id = crypto.randomUUID() as string
     const pos = position || new THREE.Vector3(0, 0, 0)
@@ -81,19 +103,24 @@ export function useSceneObjects(
       transform: new THREE.Matrix4(),
     }
     if (category === 'force') {
-      obj.forceVector = new THREE.Vector3(0, 0, 1)
+      obj.forceVector = new THREE.Vector3(0, 1, 0)
     }
     objects.value.push(obj)
+    addMesh(obj, pos)
+    return id
+  }
+
+  function addMesh(obj: EditorObject, position?: THREE.Vector3) {
+    const id = obj.id
     const mesh = createMesh(obj)
     scene?.value?.add(mesh)
-    if (category === 'force') {
-      const arrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), pos, 1, 0xff0000)
+    if (obj.category === 'force') {
+      const arrow = new THREE.ArrowHelper(obj.forceVector?.clone(), position, 1, 0xff0000)
       arrow.userData = { parentId: id, type: 'direction' }
       scene?.value?.add(arrow)
       directionArrow.value = arrow
     }
     selectObject(id)
-    return id
   }
 
   function addObjectWithTransform(
@@ -128,11 +155,22 @@ export function useSceneObjects(
   }
 
   function removeObject(id: string) {
+    removeMesh(id)
+    objects.value = objects.value.filter((o) => o.id !== id)
+    if (selectedId.value === id) selectObject(null)
+  }
+
+  function removeMesh(id: string) {
     const obj = objects.value.find((o) => o.id === id)
     if (!obj) return
-    const mesh = scene?.value?.children.find((c) => c.userData?.id === id)
+    const mesh = scene?.value?.children.find((c) => c.userData?.id === id) as THREE.Mesh
     if (mesh) {
-      ;(mesh as THREE.Mesh)?.geometry.dispose()
+      mesh.geometry.dispose()
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((m) => m.dispose())
+      } else {
+        mesh.material?.dispose()
+      }
       scene?.value?.remove(mesh)
     }
     if (obj.category === 'force') {
@@ -141,8 +179,6 @@ export function useSceneObjects(
       )
       if (arrow) scene?.value?.remove(arrow)
     }
-    objects.value = objects.value.filter((o) => o.id !== id)
-    if (selectedId.value === id) selectObject(null)
   }
 
   function selectObject(id: string | null) {
@@ -151,8 +187,10 @@ export function useSceneObjects(
     removeControls()
     selectedId.value = id
     if (!id) {
+      showHideForceControls(false)
       selectedMesh.value = null
       directionArrow.value = null
+      selectedObj.value = null
       return
     }
     const mesh = scene?.value?.children.find((c) => c.userData?.id === id) as THREE.Mesh
@@ -199,6 +237,42 @@ export function useSceneObjects(
     }
   }
 
+  function showHideForceControls(show: boolean) {
+    if (
+      !selectedMesh.value ||
+      !directionArrow.value ||
+      !selectedObj.value ||
+      selectedObj.value.category !== 'force'
+    )
+      return
+    forceSelectablePrefab.visible = show
+    if (show) forceSelectablePrefab.applyMatrix4(directionArrow.value.matrix)
+    else {
+      forceSelectablePrefab.visible = false
+      forceSelectablePrefab.matrix.identity()
+      forceSelectablePrefab.matrix.decompose(
+        forceSelectablePrefab.position,
+        forceSelectablePrefab.quaternion,
+        forceSelectablePrefab.scale,
+      )
+    }
+    const mesh = selectedMesh.value as THREE.Mesh
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((m) => {
+        const mSm = m as THREE.MeshStandardMaterial
+        if (!mSm) return
+        mSm.wireframe = show
+        mSm.color = new THREE.Color(!show ? forceColor : wireframeColor)
+      })
+    } else {
+      const mSm = mesh.material as THREE.MeshStandardMaterial
+      if (mSm) {
+        mSm.wireframe = show
+        mSm.color = new THREE.Color(!show ? forceColor : wireframeColor)
+      }
+    }
+  }
+
   function showTransformControls(mode: string | null) {
     if (!camera?.value || !renderer?.value) return
     removeControls()
@@ -213,14 +287,15 @@ export function useSceneObjects(
 
     activeControls = new TransformControls(camera.value, renderer.value.domElement)
     activeControls.setMode(tMode as TransformControlsMode)
-    activeControls.translationSnap = 1
+    activeControls.translationSnap = 0.5
+    activeControls.scaleSnap = 0.5
     activeControls.rotationSnap = Math.PI / 16
-    activeControls.minX = 0 //minX is not found by IDE but it exists and works
-    activeControls.minY = 0
-    activeControls.minZ = 0
-    activeControls.maxX = nx.value ?? Infinity
-    activeControls.maxY = ny.value ?? Infinity
-    activeControls.maxZ = nz.value ?? Infinity
+    activeControls.minX = 0.5 //minX is not found by IDE but it exists and works
+    activeControls.minY = 0.5
+    activeControls.minZ = 0.5
+    activeControls.maxX = (nx.value ?? Infinity) - 0.5
+    activeControls.maxY = (ny.value ?? Infinity) - 0.5
+    activeControls.maxZ = (nz.value ?? Infinity) - 0.5
     activeControls.attach(isForce ? directionArrow.value! : selectedMesh.value)
     activeControls.addEventListener('dragging-changed', (event) => {
       // if (event.value && activeControls) {
@@ -238,9 +313,14 @@ export function useSceneObjects(
       }
     })
     activeControls.addEventListener('change', () => {
-      if (mode != 'translate') return
+      if (mode !== 'translate' && mode !== 'force_rotate') return
       if (!directionArrow.value || !selectedMesh.value) return
-      directionArrow.value!.position.copy(selectedMesh.value.position)
+      if (mode === 'force_rotate') {
+        forceSelectablePrefab.rotation.copy(directionArrow.value.rotation)
+      } else {
+        directionArrow.value!.position.copy(selectedMesh.value.position)
+        forceSelectablePrefab.position.copy(selectedMesh.value.position)
+      }
     })
     scene?.value?.add(activeControls.getHelper())
   }
@@ -253,13 +333,9 @@ export function useSceneObjects(
     obj.transform.copy(selectedMesh.value.matrix)
     if (obj.category === 'force' && directionArrow.value && obj.forceVector) {
       const worldDir = new THREE.Vector3(0, 1, 0).applyQuaternion(directionArrow.value.quaternion)
-      console.log('worlddir', worldDir)
       const length = obj.forceVector.length()
       const forceVec = worldDir.multiplyScalar(length)
-      console.log('oldforcevec', obj.forceVector)
-      console.log('newforcevec', forceVec)
       obj.forceVector = forceVec
-      console.log('new force dir')
     }
   }
 
@@ -296,6 +372,41 @@ export function useSceneObjects(
     }
   }
 
+  function setForceDir(dir: string) {
+    if (!selectedObj.value?.forceVector || !directionArrow.value) return
+    let targetVec: THREE.Vector3
+    switch (dir) {
+      case 'posX':
+        targetVec = new THREE.Vector3(1, 0, 0)
+        break
+      case 'negX':
+        targetVec = new THREE.Vector3(-1, 0, 0)
+        break
+      case 'posY':
+        targetVec = new THREE.Vector3(0, 1, 0)
+        break
+      case 'negY':
+        targetVec = new THREE.Vector3(0, -1, 0)
+        break
+      case 'posZ':
+        targetVec = new THREE.Vector3(0, 0, 1)
+        break
+      case 'negZ':
+        targetVec = new THREE.Vector3(0, 0, -1)
+        break
+      default:
+        console.error('unknown force direction')
+        return
+    }
+    const sourceVec = selectedObj.value.forceVector.clone()
+    sourceVec.normalize()
+    const quaternion = new THREE.Quaternion()
+    quaternion.setFromUnitVectors(sourceVec, targetVec)
+    directionArrow.value.applyQuaternion(quaternion)
+    forceSelectablePrefab.applyQuaternion(quaternion)
+    syncFromScene()
+  }
+
   return {
     objects,
     selectedId,
@@ -310,5 +421,9 @@ export function useSceneObjects(
     updateForceStrength,
     clearAllObjects,
     loadSceneFromData,
+    changeSelectedPrimitive,
+    showHideForceControls,
+    setForceDir,
+    removeControls,
   }
 }

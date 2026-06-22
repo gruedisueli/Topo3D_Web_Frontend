@@ -26,7 +26,7 @@ export function useVoxelVisualization(
   const forceArrows: THREE.ArrowHelper[] = []
 
   //pre-build a unit cube geometry
-  const boxGeometry = new THREE.BoxGeometry(0.99, 0.99, 0.99)
+  const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
   const iterationBoxGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75)
   const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd })
 

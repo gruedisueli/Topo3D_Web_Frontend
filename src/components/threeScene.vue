@@ -22,6 +22,7 @@
       @mode-change="handleTransformModeChange"
       @force-strength-change="handleForceStrengthChange"
     />
+    <OrbitHints></OrbitHints>
   </div>
 </template>
 
@@ -39,7 +40,7 @@ import { useHover } from '@/composables/useHover.ts'
 import type { SavedScene } from '@/types/scene'
 import ControlPanel from './controlPanel.vue'
 import TransformToolbar from './transformToolbar.vue'
-import EditorToolbar from './editorToolbar.vue'
+import OrbitHints from './orbitHints.vue'
 import { EffectComposer } from 'three/examples/jsm/Addons.js'
 import { RenderPass } from 'three/examples/jsm/Addons.js'
 import { OutlinePass } from 'three/examples/jsm/Addons.js'
@@ -62,6 +63,9 @@ const nelx = ref(32)
 const nely = ref(16)
 const nelz = ref(8)
 const threshold = ref(0.001)
+const userIdle = ref<boolean>(false)
+const autoRotateDelayTime = 60000 //milliseconds
+let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
 //use provide for global values
@@ -80,6 +84,7 @@ provide('optimizer', optimizer)
 provide('voxelizer', voxelizer)
 provide('voxelVisualization', voxelVisualization)
 provide('sceneObjects', sceneObjects)
+provide('userIdle', userIdle)
 
 const containerRef = ref<HTMLDivElement>()
 
@@ -94,6 +99,20 @@ function registerUpdate(callback: () => void) {
   }
 }
 
+function startAutoRotate() {
+  if (!orbitControls.value) return
+  userIdle.value = true
+  orbitControls.value.autoRotate = true
+}
+
+function resetAutoRotateTimer() {
+  if (!orbitControls.value) return
+  orbitControls.value.autoRotate = false
+  userIdle.value = false
+  clearTimeout(autoRotateTimeout)
+  autoRotateTimeout = setTimeout(startAutoRotate, autoRotateDelayTime)
+}
+
 onMounted(() => {
   if (!containerRef.value) return
 
@@ -102,7 +121,12 @@ onMounted(() => {
   scene.value.background = new THREE.Color(0x111122)
 
   //initial camera
-  camera.value = new THREE.PerspectiveCamera(45, 1, 0.1, 1000)
+  camera.value = new THREE.PerspectiveCamera(
+    45,
+    containerRef.value.clientWidth / containerRef.value.clientHeight,
+    0.1,
+    1000,
+  )
   camera.value.position.set(50, 50, 50)
   camera.value.lookAt(0, 0, 0)
 
@@ -122,6 +146,7 @@ onMounted(() => {
   containerRef.value.appendChild(renderer.value.domElement)
 
   orbitControls.value = new OrbitControls(camera.value, renderer.value.domElement)
+  orbitControls.value.autoRotateSpeed = 0.5
 
   //instantiate composables
   sceneObjects.value = useSceneObjects(scene, camera, renderer, orbitControls, nelx, nely, nelz)
@@ -162,8 +187,11 @@ onMounted(() => {
     }
     hover.value?.updateHover()
     composer.value?.render()
+    orbitControls?.value?.update()
   }
   animate()
+  resetAutoRotateTimer()
+  startAutoRotate()
   window.addEventListener('resize', onResize)
 })
 
@@ -201,6 +229,7 @@ function onMouseMove(event: MouseEvent) {
   pointer.value.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
   pointer.value.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
   hover.value?.mouseMoveHover()
+  resetAutoRotateTimer()
 }
 
 // Create a mouse leave callback registry

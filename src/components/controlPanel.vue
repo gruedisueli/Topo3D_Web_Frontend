@@ -175,7 +175,7 @@
             <button class="transparent-btn" @click="add('obstacle')">
               <img src="@/assets/icons/obstacle.svg" width="48px" height="48px" />
             </button>
-            <span class="button-hint">Add Obstacle</span>
+            <span class="button-hint">Add Keepout</span>
           </div>
           <div class="button-container">
             <button class="transparent-btn" @click="removeSelected">
@@ -188,7 +188,35 @@
     </div>
     <div class="toolbar region">
       <button class="expander-button" @click="clickInfo()">Info</button>
-      <div class="tab" v-if="infoTabOpen"></div>
+      <div class="tab" v-if="infoTabOpen">
+        <p class="info-text">
+          This is an app for 3D structural topology optimization. You can find more information
+          about how to use the app in my
+          <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank"
+            >frontend repository</a
+          >.
+        </p>
+        <p class="info-text">
+          The frontend of the app is running using Vue.js and Three.js. Voxelized data is
+          transmitted to a backend GPU-enabled server for processing, and code can be found in my
+          <a href="https://github.com/gruedisueli/Topo3D_Web_API" target="_blank"
+            >backend repository</a
+          >. Your imported STLs are not transmitted to the backend and remain on your machine. Only
+          voxelized data is transmitted.
+        </p>
+        <p class="info-text">
+          The optimizer is my customized
+          <a href="https://github.com/gruedisueli/PyTopo3D_callbacks" target="_blank">fork</a> of
+          the
+          <a href="https://github.com/jihoonkim888/PyTopo3D" target="_blank">Pytopo3d repository</a
+          >.
+        </p>
+        <p class="info-text">
+          You can view more of my work at
+          <a href="https://gavinruedisueli.com" target="_blank">gavinruedisueli.com</a>. If you
+          would like to contact me, please email me at gavin@gavinruedisueli.com
+        </p>
+      </div>
     </div>
   </div>
 </template>
@@ -203,14 +231,14 @@ import { STLLoader } from 'three/examples/jsm/Addons.js'
 import * as THREE from 'three'
 import type { ShallowRef } from 'vue'
 import ProgressBar from './progressBar.vue'
-import type { ObjectCategory, PrimitiveType } from '@/types/editor'
+import type { ObjectCategory } from '@/types/editor'
 
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
 const renderer = inject<ShallowRef<THREE.WebGLRenderer | null>>('renderer')
 const optimizer = inject<ReturnType<typeof useOptimization> | null>('optimizer')
 const sceneObjects = inject<Ref<ReturnType<typeof useSceneObjects> | null>>('sceneObjects')
-const primitive = ref<PrimitiveType>('cube')
+
 const optimizerRunning = computed(() => {
   return optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
 })
@@ -293,14 +321,12 @@ onMounted(async () => {
     loaded.push({ name: data.name, data: data })
   }
   scenes.value = loaded
+  selectedScene.value = 'Cantilever'
+  await selectScene()
 })
 
 const add = (category: ObjectCategory) => {
-  sceneObjects?.value?.addObject(category, primitive.value)
-}
-
-function setPrimitive(p: PrimitiveType) {
-  primitive.value = p
+  sceneObjects?.value?.addObject(category, 'cube')
 }
 
 const removeSelected = () => {
@@ -349,7 +375,6 @@ async function loadStlFile(fileName: string): Promise<File | null> {
 
 async function selectScene() {
   clearStl()
-  //status.value = 'disconnected'
   const data = scenes.value.find((s) => s.name === selectedScene.value)?.data
   if (!data) return
   localNelx.value = data.nelx
@@ -361,8 +386,6 @@ async function selectScene() {
   user_params.tolx = data.tolx
   user_params.maxloop = data.maxloop
   user_params.maxloop = data.maxloop
-  // user_params.pitch = data.pitch
-  // user_params.invert_design_space = data.invert_design_space
   if (data.stlFile) {
     const stlFile = await loadStlFile(data.stlFile)
     if (stlFile) {
@@ -628,17 +651,6 @@ function saveResults() {
   align-items: right;
 }
 
-.simple-button {
-  width: 100%;
-  border-radius: 4px;
-  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: black;
-  letter-spacing: 0.5px;
-  height: 30px;
-}
-
 .toolbar-label.r-aligned {
   margin-left: auto;
   text-align: right;
@@ -675,6 +687,34 @@ function saveResults() {
   border-top: 5px solid #3498db;
   border-radius: 50%;
   animation: spin 1.5s linear infinite;
+}
+
+.info-text {
+  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+}
+
+/* 1. Unvisited link */
+a:link {
+  color: #b0d6ff;
+}
+
+/* 2. Visited link */
+a:visited {
+  color: #b0d6ff; /* Purple */
+}
+
+/* 3. Mouse over link */
+a:hover {
+  color: #e83e8c; /* Pink */
+}
+
+/* 4. Selected/clicked link */
+a:active {
+  color: #fd7e14; /* Orange */
 }
 
 @keyframes spin {

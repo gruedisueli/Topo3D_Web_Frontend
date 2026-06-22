@@ -15,22 +15,22 @@
     {
       "category": "support",
       "primitive": "cube",
-      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 127, 0, 7.5, 1]
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 128, 0, 8, 1]
     },
     {
       "category": "support",
       "primitive": "cube",
-      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 0, 0, 7.5, 1]
+      "transform": [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 0, 0, 8, 1]
     },
     {
       "category": "obstacle",
       "primitive": "cube",
-      "transform": [140, 0, 0, 0, 0, 10, 0, 0, 0, 0, 10, 0, 63.5, 6.5, 7.5, 1]
+      "transform": [140, 0, 0, 0, 0, 10, 0, 0, 0, 0, 10, 0, 64, 6.5, 8, 1]
     },
     {
       "category": "force",
       "primitive": "cube",
-      "transform": [120, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 63.5, 0, 7.5, 1],
+      "transform": [120, 0, 0, 0, 0, 2, 0, 0, 0, 0, 16, 0, 64, 0, 8, 1],
       "forceVector": [0, -1, 0]
     }
   ]
