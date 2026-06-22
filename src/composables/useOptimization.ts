@@ -42,7 +42,7 @@ export function useOptimization() {
     status.value = 'connecting'
 
     //open the new connection
-    ws.value = new WebSocket('ws://localhost:8000/ws')
+    ws.value = new WebSocket('https://openai.vast.ai/gruedi')
     ws.value.binaryType = 'arraybuffer'
 
     ws.value.onopen = () => {
