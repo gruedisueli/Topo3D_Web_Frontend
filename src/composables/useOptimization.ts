@@ -42,7 +42,7 @@ export function useOptimization() {
     status.value = 'connecting'
 
     //open the new connection
-    ws.value = new WebSocket('wss://142.171.48.138:8000/ws') // new WebSocket('ws://localhost:8000/ws')
+    ws.value = new WebSocket('wss://70.30.221.109:8000/ws') // new WebSocket('ws://localhost:8000/ws')
     ws.value.binaryType = 'arraybuffer'
 
     ws.value.onopen = () => {
