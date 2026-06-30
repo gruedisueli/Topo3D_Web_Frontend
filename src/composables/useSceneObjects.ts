@@ -216,7 +216,6 @@ export function useSceneObjects(
   }
 
   function pickObject(mouseX: number, mouseY: number) {
-    console.log('picking')
     if (!renderer?.value || !camera?.value) return
     const raycaster = new THREE.Raycaster()
     const mouse = new THREE.Vector2()
