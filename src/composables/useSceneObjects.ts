@@ -90,7 +90,8 @@ export function useSceneObjects(
     const id = selectedId.value
     selectObject(null)
     removeMesh(id)
-    addMesh(selectedObj.value, pos)
+    const obj = objects.value.find((o) => o.id === id) as EditorObject
+    addMesh(obj, pos)
   }
 
   function addObject(category: ObjectCategory, primitive: PrimitiveType, position?: THREE.Vector3) {
