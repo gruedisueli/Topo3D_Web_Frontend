@@ -62,7 +62,7 @@
   transition:
     opacity 0.2s ease,
     visibility 0.2s ease;
-  transition-delay: 1.5s;
+  transition-delay: 0.25s;
 }
 
 /* When the parent container is hovered, display the hint */
