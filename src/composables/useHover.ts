@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { ref } from 'vue'
 import type { ShallowRef, Ref } from 'vue'
 import type { EditorObject } from '@/types/editor'
 
@@ -11,7 +12,7 @@ export function useHover(
 ) {
   //hover constants
   const hoveredObjects: THREE.Mesh[] = [] //objects either currently or previously hovered
-  let hoveredObjectId: string | null = null
+  const hoveredObjectId = ref<string | null>(null)
   const glowColor = new THREE.Color(0xffdd44)
   const glowIntensity = 1.5
   const lerpSpeed = 0.08
@@ -21,7 +22,7 @@ export function useHover(
   const raycaster = new THREE.Raycaster()
 
   function onMouseLeave() {
-    hoveredObjectId = null
+    hoveredObjectId.value = null
   }
 
   function onMouseMove() {
@@ -33,12 +34,12 @@ export function useHover(
     //check intersections
     const objects = scene.value.children.filter((c) => c.userData?.id)
     const intersects = raycaster.intersectObjects(objects)
-    hoveredObjectId = null
+    hoveredObjectId.value = null
     if (intersects.length > 0) {
       const hovered = intersects[0]?.object
       if (hovered && hovered instanceof THREE.Mesh) {
-        hoveredObjectId = hovered?.userData.id
-        if (hoveredObjectId && !hoveredObjects.includes(hovered))
+        hoveredObjectId.value = hovered?.userData.id
+        if (hoveredObjectId.value && !hoveredObjects.includes(hovered))
           hoveredObjects.push(hovered as THREE.Mesh)
       }
     }
@@ -82,7 +83,7 @@ export function useHover(
       const obj = hoveredObjects[i]
       if (!obj) continue
       const mat = obj.material
-      const isHovered = obj.userData.id === hoveredObjectId
+      const isHovered = obj.userData.id === hoveredObjectId.value
 
       const targetColor = isHovered ? glowColor : obj.userData.originalColor
       const targetIntensity = isHovered ? glowIntensity : obj.userData.originalEmissiveIntensity
@@ -106,5 +107,10 @@ export function useHover(
     }
   }
 
-  return { updateHover: update, mouseLeaveHover: onMouseLeave, mouseMoveHover: onMouseMove }
+  return {
+    updateHover: update,
+    mouseLeaveHover: onMouseLeave,
+    mouseMoveHover: onMouseMove,
+    hoveredObjectId,
+  }
 }

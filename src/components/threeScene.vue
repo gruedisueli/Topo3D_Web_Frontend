@@ -23,6 +23,7 @@
       @force-strength-change="handleForceStrengthChange"
     />
     <OrbitHints></OrbitHints>
+    <ObjectHint></ObjectHint>
   </div>
 </template>
 
@@ -45,6 +46,7 @@ import { EffectComposer } from 'three/examples/jsm/Addons.js'
 import { RenderPass } from 'three/examples/jsm/Addons.js'
 import { OutlinePass } from 'three/examples/jsm/Addons.js'
 import { OutputPass } from 'three/examples/jsm/Addons.js'
+import ObjectHint from './objectHint.vue'
 
 const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)
@@ -53,6 +55,7 @@ const composer = shallowRef<EffectComposer | null>(null)
 const outlinePass = shallowRef<OutlinePass | null>(null)
 const orbitControls = shallowRef<OrbitControls | null>(null)
 const pointer = ref(new THREE.Vector2(0, 0))
+const mouseClientPos = ref(new THREE.Vector2(0, 0))
 const optimizer = useOptimization()
 const voxelizer = useVoxelization()
 const resultsVisualization = ref<ReturnType<typeof useResultsVisualization> | null>(null)
@@ -74,6 +77,7 @@ provide('camera', camera)
 provide('renderer', renderer)
 provide('orbitControls', orbitControls)
 provide('pointer', pointer)
+provide('mouseClientPos', mouseClientPos)
 provide('registerUpdate', registerUpdate)
 provide('registerClick', registerClick)
 provide('registerMouseLeave', registerMouseLeave)
@@ -84,6 +88,7 @@ provide('optimizer', optimizer)
 provide('voxelizer', voxelizer)
 provide('voxelVisualization', voxelVisualization)
 provide('sceneObjects', sceneObjects)
+provide('hover', hover)
 provide('userIdle', userIdle)
 
 const containerRef = ref<HTMLDivElement>()
@@ -225,9 +230,12 @@ onUnmounted(() => {
 
 function onMouseMove(event: MouseEvent) {
   if (!renderer.value) return
+  mouseClientPos.value = new THREE.Vector2(event.clientX, event.clientY)
   const rect = renderer.value.domElement.getBoundingClientRect()
-  pointer.value.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-  pointer.value.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
+  pointer.value = new THREE.Vector2(
+    ((event.clientX - rect.left) / rect.width) * 2 - 1,
+    -((event.clientY - rect.top) / rect.height) * 2 + 1,
+  )
   hover.value?.mouseMoveHover()
   resetAutoRotateTimer()
 }
