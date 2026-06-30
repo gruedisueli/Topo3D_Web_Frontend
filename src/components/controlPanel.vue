@@ -1,8 +1,16 @@
 <template>
   <div class="main-container" @mousedown.stop @click.stop @mousemove.stop>
     <div class="toolbar region">
-      <button class="expander-button" @click="clickMain()">Main</button>
+      <div class="form-group">
+        <label class="toolbar-label menu"> Main </label>
+        <span class="spacer">
+          <button class="transparent-btn expander" @click="clickMain()">
+            <img :src="mainTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+          </button>
+        </span>
+      </div>
       <div class="tab" v-if="mainTabOpen">
+        <hr />
         <div class="form-group">
           <span class="form-group-left">
             <label class="toolbar-label">Grid X: </label>
@@ -103,8 +111,16 @@
       </div>
     </div>
     <div class="toolbar region">
-      <button class="expander-button" @click="clickAdvanced()">Advanced</button>
+      <div class="form-group">
+        <label class="toolbar-label menu"> Advanced </label>
+        <span class="spacer">
+          <button class="transparent-btn expander" @click="clickAdvanced()">
+            <img :src="advancedTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+          </button>
+        </span>
+      </div>
       <div class="tab" v-if="advancedTabOpen">
+        <hr />
         <div class="form-group">
           <!-- <label>Design Space STL (optional)</label> -->
           <input
@@ -156,8 +172,16 @@
       </div>
     </div>
     <div class="toolbar region">
-      <button class="expander-button" @click="clickAddRemove()">Add / Remove</button>
+      <div class="form-group">
+        <label class="toolbar-label menu"> Add / Remove </label>
+        <span class="spacer">
+          <button class="transparent-btn expander" @click="clickAddRemove()">
+            <img :src="addRemoveTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+          </button>
+        </span>
+      </div>
       <div class="tab" v-if="addRemoveTabOpen">
+        <hr />
         <span class="form-group-left">
           <div class="button-container">
             <button class="transparent-btn" @click="add('support')">
@@ -187,8 +211,16 @@
       </div>
     </div>
     <div class="toolbar region">
-      <button class="expander-button" @click="clickInfo()">Info</button>
+      <div class="form-group">
+        <label class="toolbar-label menu"> Info </label>
+        <span class="spacer">
+          <button class="transparent-btn expander" @click="clickInfo()">
+            <img :src="infoTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+          </button>
+        </span>
+      </div>
       <div class="tab" v-if="infoTabOpen">
+        <hr />
         <p class="info-text">
           This is an app for 3D structural topology optimization. You can find more information
           about how to use the app in my
@@ -225,6 +257,8 @@
 import { reactive, watch, ref, onMounted, computed, inject } from 'vue'
 import type { Ref } from 'vue'
 import { useOptimization } from '@/composables/useOptimization'
+import collapseIcon from '@/assets/icons/collapse.svg'
+import expandIcon from '@/assets/icons/expand.svg'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 import type { SavedScene } from '@/types/scene'
 import { STLLoader } from 'three/examples/jsm/Addons.js'
@@ -603,6 +637,11 @@ function saveResults() {
   border-radius: 8px 8px 8px 8px;
 }
 
+.toolbar-label.menu {
+  font-size: 18px;
+  font-weight: bold;
+}
+
 .toolbar.selector {
   position: relative;
   top: 4px;
@@ -610,6 +649,10 @@ function saveResults() {
   flex-direction: row;
   transform: none;
   border-radius: 8px 8px 8px 8px;
+}
+
+.transparent-btn.expander {
+  padding: 0px;
 }
 
 .selection-box {
@@ -634,6 +677,7 @@ function saveResults() {
   align-items: center;
   gap: 8px;
   width: 100%;
+  height: auto;
 }
 
 .form-group-left {
@@ -649,6 +693,10 @@ function saveResults() {
 .slider {
   margin-left: auto;
   align-items: right;
+}
+
+.spacer {
+  margin-left: auto;
 }
 
 .toolbar-label.r-aligned {
@@ -715,6 +763,16 @@ a:hover {
 /* 4. Selected/clicked link */
 a:active {
   color: #fd7e14; /* Orange */
+}
+
+hr {
+  position: relative;
+  height: auto;
+  width: 100%;
+  padding: 0px;
+  top: 0px;
+  border: 0px;
+  border-top: 1px solid #ffffff;
 }
 
 @keyframes spin {
