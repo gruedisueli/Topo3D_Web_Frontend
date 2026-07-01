@@ -19,6 +19,26 @@
   letter-spacing: 0.5px;
 }
 
+p {
+  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  padding: 3px;
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+h2 {
+  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 3px;
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
 .hint-label {
   font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
   font-size: 14px;
@@ -98,4 +118,40 @@
   color: black;
   letter-spacing: 0.5px;
   height: 30px;
+}
+
+.popup-window {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  gap: 8px;
+  background: #333;
+  padding: 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 15;
+  pointer-events: auto;
+}
+
+/* 1. Unvisited link */
+a:link {
+  color: #b0d6ff;
+}
+
+/* 2. Visited link */
+a:visited {
+  color: #b0d6ff; /* Purple */
+}
+
+/* 3. Mouse over link */
+a:hover {
+  color: #e83e8c; /* Pink */
+}
+
+/* 4. Selected/clicked link */
+a:active {
+  color: #fd7e14; /* Orange */
 }

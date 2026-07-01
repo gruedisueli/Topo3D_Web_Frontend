@@ -1,0 +1,140 @@
+import type { HelpPage } from '@/types/help'
+
+export const helpPages: HelpPage[] = [
+  {
+    category: 'overview',
+    heading: 'What is Topology?',
+    body: 'Topology has to do with how shapes are related by connectivity. Think of how both a coffee mug and a donut have a hole. In terms of topology, both shapes are the same. You can go through the hole, but there is just one hole you can go through.',
+    media: ['./media/Mug_and_Torus_morph.gif'],
+  },
+  {
+    category: 'overview',
+    heading: 'What is Topology Optimization?',
+    body: 'When you think of the materials and surfaces inside structures, you usually will think of monolithic blocks like concrete, brick, and glass.',
+    media: ['./media/brick.png'],
+  },
+  {
+    category: 'overview',
+    heading: 'What is Topology Optimization?',
+    body: 'But forces do not distribute themselves equally in materials. You can see this yourself if you look inside formwork for a concrete building; there are rebars located where the tension forces will be greatest. When you look at a leaf, nature has automatically structured it with ribs where the forces are greatest. When you look inside bone, it is not a monolithic material either.\nWhen we do structural topology optimization, we are looking for finding the ideal distribution of material to support the applied forces and nothing more. This results in new topologies, in the form of connectivity relationships, like a spider’s web.',
+    media: ['./media/leaf.png'],
+  },
+  {
+    category: 'overview',
+    heading: 'What is Topology Optimization?',
+    body: 'Historically-speaking, these unique forms have been more difficult to build, but with modern CNC technologies such as 3D printing, it is increasingly feasible to increase strength while reducing material use, all while making beautiful structures.',
+    media: ['./media/bone-infill-animation.gif', './media/bone-explanation.png'],
+    credits: 'Images courtesy of TU Delft',
+  },
+  {
+    category: 'math',
+    heading: 'How Topology Optimization Works',
+    body: 'While the math behind the optimization can get complex, the concepts are not.\nLet’s start in 2D. Imagine a side view of a rectangular cantilever. You draw a grid over the cantilever, dividing it into hundreds of little boxes. Next you define some boxes that cannot move. These are the supports. You also define where forces are applied. You also state a goal: “I want my optimization to result in a structure with X% of the original material”. The specific number is your preference. For each of the pixels, you set a starting stiffness value that is exactly the same.\nNext, you run the simulation (or do an inordinate amount of hand calculations). A bunch of math happens behind the scenes that we don’t need to talk about right now, but after one round / iteration of this operation, we find that some of the pixels have deformed more as a result of the forces applied.\nIn structural terms this is “strain” (distance moved per force applied). The simulation then makes a decision for each pixel: if it is more strained, then it adds some stiffness to it. If it is less strained, it reduces the stiffness of it. We then do this over, and over again, hundreds or thousands of times, until what we are left with are the most essential pixels in the grid.',
+    media: ['./media/Topologieoptimierung.gif'],
+    credits: 'Image courtesy of KIT',
+  },
+  {
+    category: 'math',
+    heading: 'How Topology Optimization Works',
+    body: 'The transition to 3D at this point is trivial, and is the same as 2D except that it requires a lot more calculations. This is the main reason that structural topology optimization requires such powerful computers to run. The number of calculations grows exponentially as the resolution of a 3D optimization increases. At this rate, optimizations beyond a few million voxels become completely untenable even on a powerful GPU, and you start needing arrays of GPUs. You can see where this goes: $$$.\nThis being said, for the purposes of a learning tool, optimizations of several hundred thousand voxels are perfectly reasonable to perform on a modest GPU or even the CPU if you are willing to wait longer. This project tries to find a middle-ground between responsiveness and financial economics in order to provide an accessible learning tool.',
+    media: [],
+  },
+  {
+    category: 'goals',
+    heading: 'Why Create This App?',
+    body: 'While topology optimization is a relatively simple concept, the usage of it is generally not within reach of ordinary people. The tools are embedded in professional engineering software and/or require intensive computational power that most people do not have at home.\nCertain free 2D applications do exist, which you can try out on your own, and which run on any computer since they are significantly less complicated than 3D optimizations. Here is an example from the freely-available "TopOptApp". As you can see, it is an excellent tool for seeing instantaneous results and playing with structures.',
+    media: ['./media/beam-long.mp4'],
+  },
+  {
+    category: 'goals',
+    heading: 'Why Create This App?',
+    body: 'There exist some amazing free and open source tools, however for someone who simply wants to explore what topology optimization is, there exist barriers to entry: complex installation procedures, dependencies, new tools (e.g., GitHub repositories and command line interfaces), not to mention the hardware requirements.\nWhat I seek to do with this project is make an already-built, open-source optimizer, [Pytopo3D](https://github.com/jihoonkim888/PyTopo3D) readily-accessible through a simple online interface, with no installation requirements for the user, so they can just start right away with exploring these fascinating structures.\nBelow is an animation created from the original Pytopo3D scripts. While it is a great animation, creating something like this requires installing the packages, navigating the command line, and preconceiving the scene as a JSON file without any kind of GUI, which is something all users will struggle with to varying degrees, regardless of their background.',
+    media: ['./media/pytopo3d_animation.gif'],
+  },
+  {
+    category: 'goals',
+    heading: 'Why Create This App?',
+    body: 'My long-term goal is to find another backend optimizer that is more efficient than PyTopo3D and enables users to run optimizations with millions or billions of voxels.\nOne possibility is [Narrow Band Topology Optimization](https://github.com/yuanming-hu/spgrid_topo_opt), published in SIGGRAPH in 2018. This project achieved seemingly miraculous optimization rates on consumer-grade GPUs. The main issue with implementing this on the backend is that the dependencies are far more specific than those of Pytopo3D. Creating a Docker container with the correct version of Linux and all the legacy dependencies that the package requires is the main hurdle.\nBelow is an image from this amazing project.',
+    media: ['./media/bird-beak.gif'],
+    credits:
+      'Image courtesy of Liu, Haixiang and Hu, Yuanming and Zhu, Bo and Matusik, Wojciech and Sifakis, Eftychios',
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can rotate the camera using the left mouse button or a single finger if on a mobile device.',
+    media: ['./media/orbit_camera.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can pan the camera using the right mouse button or two fingers if on a mobile device.',
+    media: ['./media/pan_camera.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can zoom the camera using the mouse scroll wheel or using pinch to zoom on your mobile device.',
+    media: ['./media/zoom_camera.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can select elements by clicking/tapping on them. You can delete them by clicking the delete button in the menu.',
+    media: ['./media/delete_elements.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can change the number of voxels in any dimension by adjusting the number of divisions.\nNote that the maximum number of voxels is fixed for optimization performance reasons. You are sharing resources with other users. The maximum dimension of the grid in any direction is recalculated each time you adjust the grid to keep the voxel count within the allowable range.',
+    media: ['./media/change_divisions.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can add a support by clicking on the button in the menu.',
+    media: ['./media/add_support.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can move an element by clicking on the move tool and using the controls on the object.',
+    media: ['./media/move_element.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can rotate an element by clicking on the rotate tool and using the controls on the object.',
+    media: ['./media/rotate_element.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can scale an element by clicking on the scale tool and using the controls on the object.',
+    media: ['./media/scale_element.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'Force elements work slightly differently from other elements. The direction of the force is independent of the object rotation. For example, if you rotate a force object, you are rotating the geometry that overlaps the voxel field, and you update where forces are applied, but you do not change the force direction or magnitude.\n To modify first direction or magnitude, click on the modify forces button. From there you have access to additional controls. A large arrow also appears to help you better visualize the force direction.',
+    media: ['./media/modify_force.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can load different preset scenes from the dropdown menu. You can modify these scenes as you see fit, or delete everything from the scene and start fresh.',
+    media: ['./media/load_presets.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'When you are ready, you can start an optimization by using the button in the menu. Note that due to limited backend resources, if more than one user is running an optimization at the same time, you will be put into a queue. Also note that larger voxel fields take significantly longer to set up and you may wait a minute or two before seeing any results.',
+    media: ['./media/run_opt.mp4'],
+  },
+  {
+    category: 'usage',
+    heading: 'How To Use The App',
+    body: 'You can also add obstructions / keepout regions / voids to the design space. These will prevent any structure from being placed within them.',
+    media: ['./media/add_void.mp4'],
+  },
+]

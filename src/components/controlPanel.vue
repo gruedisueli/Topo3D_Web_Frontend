@@ -221,6 +221,7 @@
       </div>
       <div class="tab" v-if="infoTabOpen">
         <hr />
+        <button class="simple-button" @click="openHelpMenu()">Help</button>
         <p class="info-text">
           This is an app for 3D structural topology optimization. You can find more information
           about how to use the app in my
@@ -251,6 +252,7 @@
       </div>
     </div>
   </div>
+  <HelpMenu v-model:open="helpMenuOpen"></HelpMenu>
 </template>
 
 <script setup lang="ts">
@@ -266,6 +268,7 @@ import * as THREE from 'three'
 import type { ShallowRef } from 'vue'
 import ProgressBar from './progressBar.vue'
 import type { ObjectCategory } from '@/types/editor'
+import HelpMenu from './helpMenu.vue'
 
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
@@ -346,6 +349,7 @@ const advancedTabOpen = ref<boolean>(false)
 const infoTabOpen = ref<boolean>(false)
 const mainTabOpen = ref<boolean>(true)
 const addRemoveTabOpen = ref<boolean>(true)
+const helpMenuOpen = ref<boolean>(false)
 
 onMounted(async () => {
   const loaded = []
@@ -387,6 +391,10 @@ function clickAddRemove() {
 function resetScalingMatrix() {
   stlScalingMatrix.value.identity()
   emit('update:scaling-matrix', stlScalingMatrix.value)
+}
+
+function openHelpMenu() {
+  helpMenuOpen.value = true
 }
 
 //loads STL file saved in public folder
@@ -743,26 +751,6 @@ function saveResults() {
   font-weight: 400;
   color: #e0e0e0;
   letter-spacing: 0.5px;
-}
-
-/* 1. Unvisited link */
-a:link {
-  color: #b0d6ff;
-}
-
-/* 2. Visited link */
-a:visited {
-  color: #b0d6ff; /* Purple */
-}
-
-/* 3. Mouse over link */
-a:hover {
-  color: #e83e8c; /* Pink */
-}
-
-/* 4. Selected/clicked link */
-a:active {
-  color: #fd7e14; /* Orange */
 }
 
 hr {
