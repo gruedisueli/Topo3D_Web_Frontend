@@ -1,5 +1,8 @@
 <template>
   <div class="main-container" @mousedown.stop @click.stop @mousemove.stop>
+    <div class="title-block">
+      <h1>3DStructTopoOpt</h1>
+    </div>
     <div class="toolbar region">
       <div class="form-group">
         <label class="toolbar-label menu"> Main </label>
@@ -655,6 +658,15 @@ function saveResults() {
 
 .main-container::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.45);
+}
+
+.title-block {
+  position: relative;
+  top: 4px;
+  left: 4px;
+  width: 300px;
+  text-align: center;
+  background: none;
 }
 
 .toolbar {
