@@ -636,6 +636,25 @@ function saveResults() {
   z-index: 10; /* Higher than canvas z-index */
   pointer-events: auto;
   text-align: center;
+  overflow-y: auto;
+  max-height: calc(100vh - 40px);
+}
+
+.main-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.main-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.main-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+}
+
+.main-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .toolbar {
