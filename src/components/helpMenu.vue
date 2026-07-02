@@ -3,36 +3,40 @@
     <h2>{{ helpPages[currentIndex]?.heading }}</h2>
     <p v-html="renderMarkdownLinks(helpPages[currentIndex]?.body ?? '')"></p>
     <div class="media-container">
-      <template v-for="(src, index) in helpPages[currentIndex]?.media" :key="index">
-        <img v-if="isImage(src)" :src="renderMediaSrc(src)" alt="Help media" />
-        <video
-          v-else-if="isVideo(src)"
-          :src="renderMediaSrc(src)"
-          controls
-          muted
-          autoplay
-          loop
-        ></video>
-      </template>
+      <img
+        v-if="isImage(helpPages[currentIndex]?.media)"
+        :src="renderMediaSrc(helpPages[currentIndex]!.media)"
+        alt="Help media"
+      />
+      <video
+        v-else-if="isVideo(helpPages[currentIndex]?.media)"
+        :src="renderMediaSrc(helpPages[currentIndex]!.media)"
+        controls
+        muted
+        autoplay
+        loop
+      ></video>
     </div>
-    <p v-html="helpPages[currentIndex]?.credits ?? ''"></p>
-    <span class="next-prev">
-      <button
-        class="simple-button half-width"
-        @click="currentIndex--"
-        :disabled="currentIndex <= 0"
-      >
-        Previous
-      </button>
-      <button
-        class="simple-button half-width"
-        @click="currentIndex++"
-        :disabled="currentIndex >= helpPages.length - 1"
-      >
-        Next
-      </button>
-    </span>
-    <button class="simple-button" @click="$emit('update:open', false)">Close</button>
+    <p class="credit" v-html="helpPages[currentIndex]?.credits ?? ''"></p>
+    <div class="bottom-buttons">
+      <span class="next-prev">
+        <button
+          class="simple-button half-width"
+          @click="currentIndex--"
+          :disabled="currentIndex <= 0"
+        >
+          Previous
+        </button>
+        <button
+          class="simple-button half-width"
+          @click="currentIndex++"
+          :disabled="currentIndex >= helpPages.length - 1"
+        >
+          Next
+        </button>
+      </span>
+      <button class="simple-button" @click="$emit('update:open', false)">Close</button>
+    </div>
   </div>
 </template>
 
@@ -56,7 +60,8 @@ function renderMarkdownLinks(text: string): string {
   )
 }
 
-function isImage(src: string): boolean {
+function isImage(src: string | undefined): boolean {
+  if (!src) return false
   const ext = src?.split('?')[0]?.toLowerCase() ?? ''
   return (
     ext.endsWith('.jpg') ||
@@ -67,7 +72,8 @@ function isImage(src: string): boolean {
   )
 }
 
-function isVideo(src: string): boolean {
+function isVideo(src: string | undefined): boolean {
+  if (!src) return false
   const ext = src?.split('?')[0]?.toLowerCase() ?? ''
   return ext.endsWith('.mp4') || ext.endsWith('.webm') || ext.endsWith('.mov')
 }
@@ -82,22 +88,65 @@ function renderMediaSrc(src: string): string {
 </script>
 
 <style scoped>
-.media-container {
-  margin-top: 1rem;
+.credit {
+  text-align: center;
+}
+
+.popup-window {
+  position: absolute;
+  left: 50%;
+  top: 100px;
+  bottom: 100px;
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  width: min(50%, 800px);
+  max-height: calc(100vh - 200px);
+  border-radius: 10px;
+  gap: 8px;
+  background: #333;
+  padding: 12px 12px;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 15;
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.media-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  max-height: min(50vh, 1000px);
+  min-height: 0;
+  flex-shrink: 0;
+  gap: 8px;
+  overflow: auto;
 }
 
 .media-container img,
 .media-container video {
-  max-width: 100%;
-  height: 300px;
+  display: block;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
   border-radius: 8px;
 }
 
+.bottom-buttons {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .next-prev {
+  display: flex;
+  gap: 8px;
   text-align: center;
 }
 

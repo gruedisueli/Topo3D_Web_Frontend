@@ -4,6 +4,6 @@ export interface HelpPage {
   category: HelpCategory
   heading: string
   body: string
-  media: string[]
+  media: string
   credits?: string
 }
