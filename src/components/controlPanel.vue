@@ -227,25 +227,19 @@
         <button class="simple-button" @click="openHelpMenu()">Help</button>
         <p class="info-text">
           This is an app for 3D structural topology optimization. You can find more information
-          about how to use the app in my
-          <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank"
-            >frontend repository</a
-          >.
+          about how to use the app in the help section.
         </p>
         <p class="info-text">
-          The frontend of the app is running using Vue.js and Three.js. Voxelized data is
-          transmitted to a backend GPU-enabled server for processing, and code can be found in my
-          <a href="https://github.com/gruedisueli/Topo3D_Web_API" target="_blank"
+          The
+          <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank">frontend</a>
+          of the app is running using Vue.js and Three.js. Voxelized data is transmitted to a
+          backend GPU-enabled server for processing, and code can be found in my
+          <a href="https://github.com/gruedisueli/PyTopo3D_Backend/tree/dev" target="_blank"
             >backend repository</a
+          >. This backend is a fork of the
+          <a href="https://github.com/jihoonkim888/PyTopo3D" target="_blank">PyTopo3d repository</a
           >. Your imported STLs are not transmitted to the backend and remain on your machine. Only
           voxelized data is transmitted.
-        </p>
-        <p class="info-text">
-          The optimizer is my customized
-          <a href="https://github.com/gruedisueli/PyTopo3D_callbacks" target="_blank">fork</a> of
-          the
-          <a href="https://github.com/jihoonkim888/PyTopo3D" target="_blank">Pytopo3d repository</a
-          >.
         </p>
         <p class="info-text">
           You can view more of my work at
