@@ -21,14 +21,21 @@
     <div class="bottom-buttons">
       <span class="next-prev">
         <button
-          class="simple-button half-width"
+          class="simple-button third-width"
+          @click="currentIndex = 0"
+          :disabled="currentIndex <= 0"
+        >
+          Beginning
+        </button>
+        <button
+          class="simple-button third-width"
           @click="currentIndex--"
           :disabled="currentIndex <= 0"
         >
           Previous
         </button>
         <button
-          class="simple-button half-width"
+          class="simple-button third-width"
           @click="currentIndex++"
           :disabled="currentIndex >= helpPages.length - 1"
         >
@@ -150,7 +157,7 @@ function renderMediaSrc(src: string): string {
   text-align: center;
 }
 
-.simple-button.half-width {
-  width: 50%;
+.simple-button.third-width {
+  width: 33%;
 }
 </style>
