@@ -230,13 +230,18 @@
           about how to use the app in the help section.
         </p>
         <p class="info-text">
-          The
-          <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank">frontend</a>
-          of the app is running using Vue.js and Three.js. Voxelized data is transmitted to a
-          backend GPU-enabled server for processing, and code can be found in my
-          <a href="https://github.com/gruedisueli/PyTopo3D_Backend/tree/dev" target="_blank"
+          The frontend of the app is running using Vue.js and Three.js. Here is a link to the
+          <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank"
+            >frontend repository</a
+          >. Voxelized data is transmitted to a backend GPU-enabled server for processing, and code
+          can be found in my
+          <a href="https://github.com/gruedisueli/Topo3D_Web_Backend" target="_blank"
             >backend repository</a
-          >. This backend is a fork of the
+          >. The optimizer itself is a
+          <a href="https://github.com/gruedisueli/PyTopo3D_Backend/tree/dev" target="_blank"
+            >fork</a
+          >
+          of the
           <a href="https://github.com/jihoonkim888/PyTopo3D" target="_blank">PyTopo3d repository</a
           >. Your imported STLs are not transmitted to the backend and remain on your machine. Only
           voxelized data is transmitted.
