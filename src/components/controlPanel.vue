@@ -172,6 +172,14 @@
             step="0.5"
           />
         </span>
+        <span class="form-group-left">
+          <label class="toolbar-label">Autorotate On Idle</label>
+          <input
+            type="checkbox"
+            @click="$emit('update:autorotate', !autorotate)"
+            :checked="autorotate"
+          />
+        </span>
       </div>
     </div>
     <div class="toolbar region">
@@ -282,6 +290,10 @@ const optimizerRunning = computed(() => {
   return optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
 })
 
+defineProps<{
+  autorotate: boolean
+}>()
+
 const emit = defineEmits<{
   (e: 'start', params: Record<string, unknown>): void
   (e: 'stop'): void
@@ -291,6 +303,7 @@ const emit = defineEmits<{
   (e: 'stlLoaded', stl: THREE.Mesh): void
   (e: 'saveResults'): void
   (e: 'update:scaling-matrix', matrix: THREE.Matrix4): void
+  (e: 'update:autorotate', value: boolean): void
 }>()
 
 //local UI state

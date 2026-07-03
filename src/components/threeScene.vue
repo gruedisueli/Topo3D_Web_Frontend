@@ -17,6 +17,7 @@
       @stl-loaded="handleStlLoaded"
       @save-results="handleSaveResults"
       @update:scaling-matrix="handleUpdateScalingMatrix"
+      v-model:autorotate="autoRotate"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
@@ -68,6 +69,7 @@ const nelz = ref(8)
 const threshold = ref(0.001)
 const userIdle = ref<boolean>(false)
 const autoRotateDelayTime = 60000 //milliseconds
+const autoRotate = ref(true)
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
@@ -105,7 +107,7 @@ function registerUpdate(callback: () => void) {
 }
 
 function startAutoRotate() {
-  if (!orbitControls.value) return
+  if (!orbitControls.value || !autoRotate.value) return
   userIdle.value = true
   orbitControls.value.autoRotate = true
 }
