@@ -42,7 +42,9 @@ export function useOptimization() {
     status.value = 'connecting'
 
     //open the new connection
-    ws.value = new WebSocket('wss://gruedi.com/ws') // new WebSocket('ws://localhost:8000/ws')
+    const isLocal =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ws.value = new WebSocket(isLocal ? 'ws://localhost:8000/ws' : 'wss://gruedi.com/ws')
     ws.value.binaryType = 'arraybuffer'
 
     ws.value.onopen = () => {
