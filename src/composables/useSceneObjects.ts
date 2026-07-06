@@ -408,7 +408,7 @@ export function useSceneObjects(
   }
 
   function showHideSceneObjects(show: boolean) {
-    const meshes = scene?.value?.children.filter((c) => c.userData?.id)
+    const meshes = scene?.value?.children.filter((c) => c.userData?.id || c.userData?.parentId)
     if (!meshes) return
     for (const mesh of meshes) {
       const m = mesh as THREE.Mesh
