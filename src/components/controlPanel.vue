@@ -223,6 +223,43 @@
     </div>
     <div class="toolbar region">
       <div class="form-group">
+        <label class="toolbar-label menu"> Visibility </label>
+        <span class="spacer">
+          <button class="transparent-btn expander" @click="clickVisibility()">
+            <img :src="visibilityTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+          </button>
+        </span>
+      </div>
+      <div class="tab" v-if="visibilityTabOpen">
+        <hr />
+        <span class="form-group-left">
+          <input
+            type="checkbox"
+            @click="$emit('update:designSpaceVisible', !designSpaceVisible)"
+            :checked="designSpaceVisible"
+          />
+          <label class="toolbar-label">Design Space</label>
+        </span>
+        <span class="form-group-left">
+          <input
+            type="checkbox"
+            @click="$emit('update:designConditionsVisible', !designConditionsVisible)"
+            :checked="designConditionsVisible"
+          />
+          <label class="toolbar-label">Design Conditions</label>
+        </span>
+        <span class="form-group-left">
+          <input
+            type="checkbox"
+            @click="$emit('update:resultsVisible', !resultsVisible)"
+            :checked="resultsVisible"
+          />
+          <label class="toolbar-label">Results</label>
+        </span>
+      </div>
+    </div>
+    <div class="toolbar region">
+      <div class="form-group">
         <label class="toolbar-label menu"> Info </label>
         <span class="spacer">
           <button class="transparent-btn expander" @click="clickInfo()">
@@ -292,6 +329,9 @@ const optimizerRunning = computed(() => {
 
 defineProps<{
   autorotate: boolean
+  designSpaceVisible: boolean
+  designConditionsVisible: boolean
+  resultsVisible: boolean
 }>()
 
 const emit = defineEmits<{
@@ -304,6 +344,9 @@ const emit = defineEmits<{
   (e: 'saveResults'): void
   (e: 'update:scaling-matrix', matrix: THREE.Matrix4): void
   (e: 'update:autorotate', value: boolean): void
+  (e: 'update:designSpaceVisible', value: boolean): void
+  (e: 'update:designConditionsVisible', value: boolean): void
+  (e: 'update:resultsVisible', value: boolean): void
 }>()
 
 //local UI state
@@ -364,6 +407,7 @@ const advancedTabOpen = ref<boolean>(false)
 const infoTabOpen = ref<boolean>(false)
 const mainTabOpen = ref<boolean>(true)
 const addRemoveTabOpen = ref<boolean>(true)
+const visibilityTabOpen = ref(false)
 const helpMenuOpen = ref<boolean>(false)
 
 onMounted(async () => {
@@ -397,6 +441,10 @@ function clickAdvanced() {
 
 function clickInfo() {
   infoTabOpen.value = !infoTabOpen.value
+}
+
+function clickVisibility() {
+  visibilityTabOpen.value = !visibilityTabOpen.value
 }
 
 function clickAddRemove() {

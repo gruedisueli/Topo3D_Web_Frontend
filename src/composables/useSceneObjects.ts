@@ -407,6 +407,16 @@ export function useSceneObjects(
     syncFromScene()
   }
 
+  function showHideSceneObjects(show: boolean) {
+    const meshes = scene?.value?.children.filter((c) => c.userData?.id)
+    if (!meshes) return
+    for (const mesh of meshes) {
+      const m = mesh as THREE.Mesh
+      if (!m) continue
+      m.visible = show
+    }
+  }
+
   return {
     objects,
     selectedId,
@@ -425,5 +435,6 @@ export function useSceneObjects(
     showHideForceControls,
     setForceDir,
     removeControls,
+    showHideSceneObjects,
   }
 }

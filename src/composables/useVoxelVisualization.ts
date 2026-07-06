@@ -199,6 +199,20 @@ export function useVoxelVisualization(
     return new THREE.Vector3(x, y, z)
   }
 
+  function showHideVoxelField(show: boolean) {
+    if (!voxelFieldMesh.value) return
+    voxelFieldMesh.value.visible = show
+  }
+
+  function showHideVoxels(show: boolean) {
+    if (supportsMesh.value) supportsMesh.value.visible = show
+    if (obstaclesMesh.value) obstaclesMesh.value.visible = show
+    for (const arrow of forceArrows) {
+      arrow.visible = show
+    }
+    if (meshMesh.value) meshMesh.value.visible = show
+  }
+
   function updateVoxelField() {
     if (!scene?.value) return
     if (voxelFieldMesh.value) {
@@ -266,5 +280,5 @@ export function useVoxelVisualization(
   )
 
   updateVoxelField()
-  return { clear }
+  return { clear, showHideVoxelField, showHideVoxels }
 }

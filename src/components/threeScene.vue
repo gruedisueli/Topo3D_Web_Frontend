@@ -18,6 +18,9 @@
       @save-results="handleSaveResults"
       @update:scaling-matrix="handleUpdateScalingMatrix"
       v-model:autorotate="autoRotate"
+      v-model:design-space-visible="designSpaceVisible"
+      v-model:design-conditions-visible="designConditionsVisible"
+      v-model:results-visible="resultsVisible"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
@@ -70,6 +73,9 @@ const threshold = ref(0.001)
 const userIdle = ref<boolean>(false)
 const autoRotateDelayTime = 60000 //milliseconds
 const autoRotate = ref(true)
+const designSpaceVisible = ref(true)
+const designConditionsVisible = ref(true)
+const resultsVisible = ref(true)
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
@@ -380,6 +386,19 @@ watch(
     outlinePass.value.selectedObjects = newMesh ? [newMesh] : []
   },
 )
+
+watch(designSpaceVisible, (visible) => {
+  voxelVisualization.value?.showHideVoxelField(visible)
+})
+
+watch(designConditionsVisible, (visible) => {
+  sceneObjects.value?.showHideSceneObjects(visible)
+  voxelVisualization.value?.showHideVoxels(visible)
+})
+
+watch(resultsVisible, (visible) => {
+  resultsVisualization.value?.showHideResults(visible)
+})
 
 function handleDimensionsUpdate(dims: { nelx: number; nely: number; nelz: number }) {
   nelx.value = dims.nelx

@@ -47,5 +47,10 @@ export function useResultsVisualization(
       renderer?.value.render(scene.value, camera.value)
   }
 
-  return { stlMesh, clear }
+  function showHideResults(show: boolean) {
+    if (!stlMesh.value) return
+    stlMesh.value.visible = show
+  }
+
+  return { stlMesh, clear, showHideResults }
 }
