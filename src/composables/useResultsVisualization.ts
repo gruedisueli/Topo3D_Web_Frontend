@@ -10,7 +10,7 @@ export function useResultsVisualization(
   renderer: ShallowRef<THREE.WebGLRenderer | null>,
   optimizer: ReturnType<typeof useOptimization>,
 ) {
-  const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd, side: THREE.DoubleSide })
+  const material = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide })
   const stlMesh = shallowRef<THREE.Mesh | null>(null)
 
   watch(optimizer.latestStlData, (stlBuffer) => {
