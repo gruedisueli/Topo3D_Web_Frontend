@@ -2,8 +2,8 @@
   <!-- <div class="title-block">
     <h1>3DStructTopoOpt</h1>
   </div> -->
-  <div class="main-container" @mousedown.stop @click.stop @mousemove.stop>
-    <div class="toolbar">
+  <div class="main-container">
+    <div class="toolbar" @mousedown.stop @click.stop @mousemove.stop>
       <IconButton
         :activated="startStopTabOpen"
         @clicked="clickStartStop()"
@@ -41,7 +41,7 @@
       ></IconButton>
     </div>
     <div class="tab-container" v-if="tabOpen">
-      <div class="tab" v-if="startStopTabOpen">
+      <div class="tab" v-if="startStopTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <button class="simple-button" @click="start" v-if="!optimizerRunning">Start</button>
         <button class="simple-button" @click="stop" v-if="optimizerRunning">Stop</button>
         <div
@@ -68,7 +68,7 @@
           </button>
         </div>
       </div>
-      <div class="tab" v-if="dimensionsTabOpen">
+      <div class="tab" v-if="dimensionsTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <div class="form-group">
           <span class="form-group-left">
             <label class="toolbar-label">Grid X: </label>
@@ -121,7 +121,7 @@
           <label class="toolbar-label r-aligned">Max Voxel Count: {{ maxVolume }}</label>
         </div>
       </div>
-      <div class="tab" v-if="loadTabOpen">
+      <div class="tab" v-if="loadTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <span class="form-group-left">
           <label class="toolbar-label">Load Preset Scene: </label>
           <select
@@ -150,7 +150,7 @@
           <span v-if="uploadedStlName">{{ uploadedStlName }} (uploaded)</span>
         </div>
       </div>
-      <div class="tab" v-if="advancedTabOpen">
+      <div class="tab" v-if="advancedTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <span class="form-group-left">
           <label class="toolbar-label">Volume Fraction: {{ user_params.volfrac }}</label>
           <input
@@ -194,7 +194,7 @@
           />
         </span>
       </div>
-      <div class="tab" v-if="addRemoveTabOpen">
+      <div class="tab" v-if="addRemoveTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <span class="form-group-left">
           <IconButton
             @clicked="add('support')"
@@ -214,7 +214,7 @@
           ></IconButton>
         </span>
       </div>
-      <div class="tab" v-if="visibilityTabOpen">
+      <div class="tab" v-if="visibilityTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <span class="form-group-left">
           <input
             type="checkbox"
@@ -240,7 +240,7 @@
           <label class="toolbar-label">Results</label>
         </span>
       </div>
-      <div class="tab" v-if="infoTabOpen">
+      <div class="tab" v-if="infoTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <button class="simple-button" @click="openHelpMenu()">Help</button>
         <p class="info-text">
           This is an app for 3D structural topology optimization. You can find more information
@@ -723,10 +723,11 @@ function saveResults() {
   background: transparent;
   padding: 12px;
   z-index: 10; /* Higher than canvas z-index */
-  pointer-events: auto;
+  pointer-events: none;
   text-align: center;
   overflow-y: auto;
   max-height: calc(100vh - 40px);
+  max-width: calc(100vw - 40px);
   box-sizing: border-box;
 }
 
@@ -781,8 +782,8 @@ function saveResults() {
   padding: 12px 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   /* Higher than canvas z-index */
-  pointer-events: auto;
   text-align: center;
+  pointer-events: auto;
 }
 
 .toolbar.selector {
