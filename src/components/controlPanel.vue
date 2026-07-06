@@ -1,19 +1,74 @@
 <template>
+  <!-- <div class="title-block">
+    <h1>3DStructTopoOpt</h1>
+  </div> -->
   <div class="main-container" @mousedown.stop @click.stop @mousemove.stop>
-    <div class="title-block">
-      <h1>3DStructTopoOpt</h1>
+    <div class="toolbar">
+      <IconButton
+        :activated="startStopTabOpen"
+        @clicked="clickStartStop()"
+        :image-src="StartStopIcon"
+      ></IconButton>
+      <IconButton
+        :activated="dimensionsTabOpen"
+        @clicked="clickDimensions()"
+        :image-src="DimensionIcon"
+      ></IconButton>
+      <IconButton
+        :activated="loadTabOpen"
+        @clicked="clickLoad()"
+        :image-src="OpenIcon"
+      ></IconButton>
+      <IconButton
+        :activated="advancedTabOpen"
+        @clicked="clickAdvanced()"
+        :image-src="AdvancedIcon"
+      ></IconButton>
+      <IconButton
+        :activated="addRemoveTabOpen"
+        @clicked="clickAddRemove()"
+        :image-src="AddRemoveIcon"
+      ></IconButton>
+      <IconButton
+        :activated="visibilityTabOpen"
+        @clicked="clickVisibility()"
+        :image-src="VisibilityIcon"
+      ></IconButton>
+      <IconButton
+        :activated="infoTabOpen"
+        @clicked="clickInfo()"
+        :image-src="InfoIcon"
+      ></IconButton>
     </div>
-    <div class="toolbar region">
-      <div class="form-group">
-        <label class="toolbar-label menu"> Main </label>
-        <span class="spacer">
-          <button class="transparent-btn expander" @click="clickMain()">
-            <img :src="mainTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
+    <div class="tab-container" v-if="tabOpen">
+      <div class="tab" v-if="startStopTabOpen">
+        <button class="simple-button" @click="start" v-if="!optimizerRunning">Start</button>
+        <button class="simple-button" @click="stop" v-if="optimizerRunning">Stop</button>
+        <div
+          v-if="
+            optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
+          "
+        >
+          <ProgressBar
+            :value="
+              optimizer ? Math.floor((optimizer?.iterationCt.value / user_params.maxloop) * 100) : 0
+            "
+            :indeterminate="optimizer?.status.value !== 'running'"
+            :status="optimizer?.status.value"
+          />
+        </div>
+        <div class="form-group">
+          <button
+            class="simple-button"
+            v-if="optimizer?.status.value === 'complete'"
+            @click="saveResults"
+            :disabled="optimizer?.status.value !== 'complete'"
+          >
+            Save Results STL
           </button>
-        </span>
+        </div>
       </div>
-      <div class="tab" v-if="mainTabOpen">
-        <hr />
+      <div class="tab" v-if="dimensionsTabOpen">
         <div class="form-group">
           <span class="form-group-left">
             <label class="toolbar-label">Grid X: </label>
@@ -65,6 +120,8 @@
         <div class="form-group">
           <label class="toolbar-label r-aligned">Max Voxel Count: {{ maxVolume }}</label>
         </div>
+      </div>
+      <div class="tab" v-if="loadTabOpen">
         <span class="form-group-left">
           <label class="toolbar-label">Load Preset Scene: </label>
           <select
@@ -78,52 +135,6 @@
             </option>
           </select>
         </span>
-        <!-- <div class="status-panel">
-          <p>Status: {{ optimizer?.status }}</p>
-          <p v-if="optimizer?.queuePosition !== null">Queue {{ optimizer?.queuePosition }}</p>
-          <p v-if="optimizer?.error">Error: {{ optimizer?.error }}</p>
-          <p v-if="optimizer?.iterationCt.value !== 0">
-            Iteration {{ optimizer?.iterationCt.value }} of {{ user_params.maxloop }}
-          </p>
-        </div> -->
-        <button class="simple-button" @click="start" v-if="!optimizerRunning">Start</button>
-        <button class="simple-button" @click="stop" v-if="optimizerRunning">Stop</button>
-        <div
-          v-if="
-            optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
-          "
-        >
-          <ProgressBar
-            :value="
-              optimizer ? Math.floor((optimizer?.iterationCt.value / user_params.maxloop) * 100) : 0
-            "
-            :indeterminate="optimizer?.status.value !== 'running'"
-            :status="optimizer?.status.value"
-          />
-        </div>
-        <div class="form-group">
-          <button
-            class="simple-button"
-            v-if="optimizer?.status.value === 'complete'"
-            @click="saveResults"
-            :disabled="optimizer?.status.value !== 'complete'"
-          >
-            Save Results STL
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="toolbar region">
-      <div class="form-group">
-        <label class="toolbar-label menu"> Advanced </label>
-        <span class="spacer">
-          <button class="transparent-btn expander" @click="clickAdvanced()">
-            <img :src="advancedTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
-          </button>
-        </span>
-      </div>
-      <div class="tab" v-if="advancedTabOpen">
-        <hr />
         <div class="form-group">
           <!-- <label>Design Space STL (optional)</label> -->
           <input
@@ -138,6 +149,8 @@
           </button>
           <span v-if="uploadedStlName">{{ uploadedStlName }} (uploaded)</span>
         </div>
+      </div>
+      <div class="tab" v-if="advancedTabOpen">
         <span class="form-group-left">
           <label class="toolbar-label">Volume Fraction: {{ user_params.volfrac }}</label>
           <input
@@ -181,18 +194,7 @@
           />
         </span>
       </div>
-    </div>
-    <div class="toolbar region">
-      <div class="form-group">
-        <label class="toolbar-label menu"> Add / Remove </label>
-        <span class="spacer">
-          <button class="transparent-btn expander" @click="clickAddRemove()">
-            <img :src="addRemoveTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
-          </button>
-        </span>
-      </div>
       <div class="tab" v-if="addRemoveTabOpen">
-        <hr />
         <span class="form-group-left">
           <IconButton
             @clicked="add('support')"
@@ -212,18 +214,7 @@
           ></IconButton>
         </span>
       </div>
-    </div>
-    <div class="toolbar region">
-      <div class="form-group">
-        <label class="toolbar-label menu"> Visibility </label>
-        <span class="spacer">
-          <button class="transparent-btn expander" @click="clickVisibility()">
-            <img :src="visibilityTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
-          </button>
-        </span>
-      </div>
       <div class="tab" v-if="visibilityTabOpen">
-        <hr />
         <span class="form-group-left">
           <input
             type="checkbox"
@@ -249,18 +240,7 @@
           <label class="toolbar-label">Results</label>
         </span>
       </div>
-    </div>
-    <div class="toolbar region">
-      <div class="form-group">
-        <label class="toolbar-label menu"> Info </label>
-        <span class="spacer">
-          <button class="transparent-btn expander" @click="clickInfo()">
-            <img :src="infoTabOpen ? collapseIcon : expandIcon" width="24px" height="24px" />
-          </button>
-        </span>
-      </div>
       <div class="tab" v-if="infoTabOpen">
-        <hr />
         <button class="simple-button" @click="openHelpMenu()">Help</button>
         <p class="info-text">
           This is an app for 3D structural topology optimization. You can find more information
@@ -298,8 +278,6 @@
 import { reactive, watch, ref, onMounted, computed, inject } from 'vue'
 import type { Ref } from 'vue'
 import { useOptimization } from '@/composables/useOptimization'
-import collapseIcon from '@/assets/icons/collapse.svg'
-import expandIcon from '@/assets/icons/expand.svg'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 import type { SavedScene } from '@/types/scene'
 import { STLLoader } from 'three/examples/jsm/Addons.js'
@@ -313,6 +291,13 @@ import SupportIcon from '@/assets/icons/support.svg'
 import ForceIcon from '@/assets/icons/force.svg'
 import ObstacleIcon from '@/assets/icons/obstacle.svg'
 import DeleteIcon from '@/assets/icons/delete.svg'
+import AddRemoveIcon from '@/assets/icons/add-remove.svg'
+import AdvancedIcon from '@/assets/icons/gear.svg'
+import VisibilityIcon from '@/assets/icons/eye.svg'
+import InfoIcon from '@/assets/icons/info.svg'
+import OpenIcon from '@/assets/icons/folder.svg'
+import DimensionIcon from '@/assets/icons/dimensions.svg'
+import StartStopIcon from '@/assets/icons/play-stop.svg'
 
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
@@ -400,12 +385,23 @@ const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd, side: THREE.D
 const maxStlBoundingBoxScaledVolume = 200000 //voxels, to stay under 64^3 limit
 const stlScalingMatrix = ref<THREE.Matrix4>(new THREE.Matrix4())
 const loadedStl = ref<THREE.Mesh | null>(null)
-const advancedTabOpen = ref<boolean>(false)
-const infoTabOpen = ref<boolean>(false)
-const mainTabOpen = ref<boolean>(true)
-const addRemoveTabOpen = ref<boolean>(true)
+const startStopTabOpen = ref(true)
+const dimensionsTabOpen = ref(false)
+const loadTabOpen = ref(false)
+const advancedTabOpen = ref(false)
+const infoTabOpen = ref(false)
+const addRemoveTabOpen = ref(false)
 const visibilityTabOpen = ref(false)
-const helpMenuOpen = ref<boolean>(false)
+const helpMenuOpen = ref(false)
+const tabStatuses = [
+  startStopTabOpen,
+  dimensionsTabOpen,
+  loadTabOpen,
+  advancedTabOpen,
+  infoTabOpen,
+  addRemoveTabOpen,
+  visibilityTabOpen,
+]
 
 onMounted(async () => {
   const loaded = []
@@ -419,6 +415,18 @@ onMounted(async () => {
   await selectScene()
 })
 
+const tabOpen = computed(() => {
+  return (
+    startStopTabOpen.value ||
+    dimensionsTabOpen.value ||
+    loadTabOpen.value ||
+    addRemoveTabOpen.value ||
+    advancedTabOpen.value ||
+    visibilityTabOpen.value ||
+    infoTabOpen.value
+  )
+})
+
 const add = (category: ObjectCategory) => {
   sceneObjects?.value?.addObject(category, 'cube')
 }
@@ -428,23 +436,44 @@ const removeSelected = () => {
     sceneObjects.value.removeObject(sceneObjects.value.selectedId.value)
 }
 
-function clickMain() {
-  mainTabOpen.value = !mainTabOpen.value
+function closeAllTabs() {
+  for (const tab of tabStatuses) {
+    tab.value = false
+  }
+}
+
+function clickStartStop() {
+  closeAllTabs()
+  startStopTabOpen.value = !startStopTabOpen.value
+}
+
+function clickDimensions() {
+  closeAllTabs()
+  dimensionsTabOpen.value = !dimensionsTabOpen.value
+}
+
+function clickLoad() {
+  closeAllTabs()
+  loadTabOpen.value = !loadTabOpen.value
 }
 
 function clickAdvanced() {
+  closeAllTabs()
   advancedTabOpen.value = !advancedTabOpen.value
 }
 
 function clickInfo() {
+  closeAllTabs()
   infoTabOpen.value = !infoTabOpen.value
 }
 
 function clickVisibility() {
+  closeAllTabs()
   visibilityTabOpen.value = !visibilityTabOpen.value
 }
 
 function clickAddRemove() {
+  closeAllTabs()
   addRemoveTabOpen.value = !addRemoveTabOpen.value
 }
 
@@ -689,15 +718,17 @@ function saveResults() {
   top: 20px;
   left: 20px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
   background: transparent;
-  padding: 12px 8px;
+  padding: 12px;
   z-index: 10; /* Higher than canvas z-index */
   pointer-events: auto;
   text-align: center;
   overflow-y: auto;
   max-height: calc(100vh - 40px);
+  max-width: 50%;
+  box-sizing: border-box;
 }
 
 .main-container::-webkit-scrollbar {
@@ -727,15 +758,32 @@ function saveResults() {
 }
 
 .toolbar {
-  top: 20px;
-  left: 20px;
+  position: relative;
   flex-direction: column;
   border-radius: 8px 8px 8px 8px;
+  height: fit-content;
+  max-width: 300px;
 }
 
 .toolbar-label.menu {
   font-size: 18px;
   font-weight: bold;
+}
+
+.tab-container {
+  position: relative;
+  flex-direction: column;
+  border-radius: 8px 8px 8px 8px;
+  height: fit-content;
+  width: 300px;
+  display: flex;
+  gap: 10px;
+  background: #333;
+  padding: 12px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  /* Higher than canvas z-index */
+  pointer-events: auto;
+  text-align: center;
 }
 
 .toolbar.selector {
@@ -839,16 +887,6 @@ function saveResults() {
   font-weight: 400;
   color: #e0e0e0;
   letter-spacing: 0.5px;
-}
-
-hr {
-  position: relative;
-  height: auto;
-  width: 100%;
-  padding: 0px;
-  top: 0px;
-  border: 0px;
-  border-top: 1px solid #ffffff;
 }
 
 @keyframes spin {

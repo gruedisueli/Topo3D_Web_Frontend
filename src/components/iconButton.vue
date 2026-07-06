@@ -11,13 +11,13 @@
 interface Props {
   activated?: boolean
   imageSrc: string
-  text: string
+  text?: string
 }
 
 withDefaults(defineProps<Props>(), {
   activated: false,
   imageSrc: 'src',
-  text: 'txt',
+  text: '',
 })
 
 defineEmits<{

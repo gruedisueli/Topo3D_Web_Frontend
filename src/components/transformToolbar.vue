@@ -217,6 +217,7 @@ h2 {
 }
 
 .toolbar {
+  position: fixed;
   top: 50%; /* move top edge to vertical center */
   right: 0; /* stick to right edge */
   transform: translateY(-50%); /* shift up by half its own height */

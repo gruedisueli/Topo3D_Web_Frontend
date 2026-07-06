@@ -1,5 +1,4 @@
 .toolbar {
-  position: fixed;
   display: flex;
   gap: 10px;
   background: #333;
