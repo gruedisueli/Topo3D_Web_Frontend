@@ -28,7 +28,9 @@ export function useVoxelVisualization(
   //pre-build a unit cube geometry
   const boxGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
   const iterationBoxGeometry = new THREE.BoxGeometry(0.75, 0.75, 0.75)
-  const material = new THREE.MeshStandardMaterial({ color: 0x3f7dbd })
+  const material = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+  })
 
   //grid materials
   const uniforms = {
@@ -53,7 +55,8 @@ export function useVoxelVisualization(
       return
     }
     const positions: THREE.Vector3[] = []
-    //const materials: THREE.MeshStandardMaterial[] = []
+    const colors: THREE.Color[] = []
+    const scales: THREE.Vector3[] = []
 
     let idx = 0
     //returning values from pytopo3d are in y,x,z order
@@ -64,13 +67,20 @@ export function useVoxelVisualization(
           const density = byteVal! / 255
           if (density < threshold.value) continue
           positions.push(new THREE.Vector3(x + 0.5, y + 0.5, z + 0.5))
-          //const color = new THREE.Color(density, 0, 1 - density)
-          //materials.push(new THREE.MeshStandardMaterial({ color: color }))
+          colors.push(new THREE.Color(1, 1 - density, 1 - density))
+          scales.push(new THREE.Vector3(density, density, density))
         }
       }
     }
 
-    instantiateVoxels(iterationsMesh, iterationBoxGeometry, material.clone(), positions)
+    instantiateVoxels(
+      iterationsMesh,
+      iterationBoxGeometry,
+      material.clone(),
+      positions,
+      scales,
+      colors,
+    )
   }
 
   //clear all preview voxels from scene
@@ -97,20 +107,33 @@ export function useVoxelVisualization(
   function instantiateVoxels(
     mesh: ShallowRef<THREE.InstancedMesh | null>,
     prefab: THREE.BoxGeometry,
-    materials: THREE.MeshStandardMaterial | THREE.MeshStandardMaterial[],
+    material: THREE.MeshStandardMaterial,
     positions: THREE.Vector3[],
+    scales?: THREE.Vector3[],
+    colors?: THREE.Color[],
   ) {
     if (mesh.value) {
       mesh.value.dispose()
       scene?.value?.remove(mesh.value)
       mesh.value = null
     }
-    mesh.value = new THREE.InstancedMesh(prefab, materials, positions.length)
+    mesh.value = new THREE.InstancedMesh(prefab, material, positions.length)
+    const colorArray = colors ? new Float32Array(colors.length * 3) : null
+
     positions.forEach((pos, i) => {
       const m = new THREE.Matrix4()
-      m.setPosition(pos.x, pos.y, pos.z)
+      if (scales) m.compose(pos, new THREE.Quaternion(), scales[i]!)
+      else m.setPosition(pos.x, pos.y, pos.z)
+      if (colorArray) {
+        const c = colors![i]!
+        colorArray[i * 3] = c.r
+        colorArray[i * 3 + 1] = c.g
+        colorArray[i * 3 + 2] = c.b
+      }
       mesh.value?.setMatrixAt(i, m)
     })
+
+    if (colorArray) mesh.value.instanceColor = new THREE.InstancedBufferAttribute(colorArray, 3)
 
     mesh.value.instanceMatrix.needsUpdate = true
     scene?.value?.add(mesh.value)
