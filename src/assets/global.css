@@ -1,13 +1,20 @@
 .toolbar {
   position: fixed;
   display: flex;
-  gap: 8px;
+  gap: 10px;
   background: #333;
   padding: 12px 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 10; /* Higher than canvas z-index */
+  /* Higher than canvas z-index */
   pointer-events: auto;
   text-align: center;
+}
+
+.sub-toolbar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .toolbar-label {
@@ -17,6 +24,25 @@
   padding: 3px;
   color: #e0e0e0;
   letter-spacing: 0.5px;
+}
+
+.btn-label {
+  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0px;
+  color: #e0e0e0;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.btn-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 5px;
+  /* border: 1px solid #ffffff;
+  border-radius: 3px; */
 }
 
 p {
@@ -64,7 +90,7 @@ h2 {
   background: transparent;
   filter: invert(100%);
   border: none;
-  padding: 10px;
+  padding: 2px;
   opacity: 0.75;
   border-radius: 4px;
 }

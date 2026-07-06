@@ -1,81 +1,53 @@
 <template>
   <div v-if="toolbarVisible" class="toolbar" @mousedown.stop @click.stop @mousemove.stop>
-    <label class="toolbar-label">{{ selectedCategory }}</label>
-    <div v-if="!modifyingForces">
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          @click="setMode('translate')"
-          :class="{ active: currentMode === 'translate' }"
-        >
-          <img src="@/assets/icons/move.png" />
-        </button>
-        <span class="button-hint">Move Object</span>
-      </div>
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          @click="setMode('rotate')"
-          :class="{ active: currentMode === 'rotate' }"
-        >
-          <img src="@/assets/icons/rotate.png" />
-        </button>
-        <span class="button-hint">Rotate Object</span>
-      </div>
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          @click="setMode('scale')"
-          :class="{ active: currentMode === 'scale' }"
-        >
-          <img src="@/assets/icons/scale.png" />
-        </button>
-        <span class="button-hint">Scale Object</span>
-      </div>
-
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          :class="{ activated: sceneObjects?.selectedObj.value?.primitive === 'cube' }"
-          @click="setPrimitive('cube')"
-        >
-          <img src="@/assets/icons/cube.svg" width="48px" height="48px" />
-        </button>
-        <span class="button-hint">Region: Cube</span>
-      </div>
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          :class="{ activated: sceneObjects?.selectedObj.value?.primitive === 'cylinder' }"
-          @click="setPrimitive('cylinder')"
-        >
-          <img src="@/assets/icons/cylinder.svg" width="48px" height="48px" />
-        </button>
-        <span class="button-hint">Region: Cylinder</span>
-      </div>
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          :class="{ activated: sceneObjects?.selectedObj.value?.primitive === 'sphere' }"
-          @click="setPrimitive('sphere')"
-        >
-          <img src="@/assets/icons/sphere.svg" width="48px" height="48px" />
-        </button>
-        <span class="button-hint">Region: Sphere</span>
-      </div>
+    <h2>{{ selectedCategory }}<br />element</h2>
+    <div class="sub-toolbar" v-if="!modifyingForces">
+      <!-- <div class="button-container"> -->
+      <IconButton
+        :activated="currentMode === 'translate'"
+        @clicked="setMode('translate')"
+        image-src="src/assets/icons/move.png"
+        text="Move"
+      ></IconButton>
+      <IconButton
+        :activated="currentMode === 'rotate'"
+        @clicked="setMode('rotate')"
+        image-src="src/assets/icons/rotate.png"
+        text="Rotate"
+      ></IconButton>
+      <IconButton
+        :activated="currentMode === 'scale'"
+        @clicked="setMode('scale')"
+        image-src="src/assets/icons/scale.png"
+        text="Scale"
+      ></IconButton>
+      <IconButton
+        :activated="sceneObjects?.selectedObj.value?.primitive === 'cube'"
+        @clicked="setPrimitive('cube')"
+        image-src="src/assets/icons/cube.svg"
+        text="Type = Cube"
+      ></IconButton>
+      <IconButton
+        :activated="sceneObjects?.selectedObj.value?.primitive === 'cylinder'"
+        @clicked="setPrimitive('cylinder')"
+        image-src="src/assets/icons/cylinder.svg"
+        text="Type = Cylinder"
+      ></IconButton>
+      <IconButton
+        :activated="sceneObjects?.selectedObj.value?.primitive === 'sphere'"
+        @clicked="setPrimitive('sphere')"
+        image-src="src/assets/icons/sphere.svg"
+        text="Type = Sphere"
+      ></IconButton>
     </div>
-    <div v-if="isForceSelected" class="force-tools">
-      <div class="button-container">
-        <button
-          class="transparent-btn"
-          :class="{ activated: modifyingForces }"
-          @click="modifyForces()"
-        >
-          <img src="@/assets/icons/forces.png" />
-        </button>
-        <span class="button-hint">Modify Forces</span>
-      </div>
-      <div v-if="modifyingForces">
+    <div v-if="isForceSelected" class="sub-toolbar">
+      <IconButton
+        :activated="modifyingForces"
+        @clicked="modifyForces()"
+        image-src="src/assets/icons/forces.png"
+        text="Modify Forces"
+      ></IconButton>
+      <div v-if="modifyingForces" class="sub-toolbar">
         <div class="button-container">
           <button @click="setMode('force_rotate')" class="simple-button">
             Set Custom Direction
@@ -141,12 +113,13 @@ import { ref, unref, computed, watch, inject } from 'vue'
 import type { ShallowRef } from 'vue'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 import type { PrimitiveType } from '@/types/editor'
+import IconButton from './iconButton.vue'
 
 const sceneObjects = inject<ShallowRef<ReturnType<typeof useSceneObjects> | null>>('sceneObjects')
 const selectedCategory = computed(() => {
   return sceneObjects?.value?.selectedObj.value?.category !== 'obstacle'
     ? sceneObjects?.value?.selectedObj.value?.category
-    : 'keepout'
+    : 'void'
 })
 const emit = defineEmits(['mode-change', 'force-strength-change'])
 const forceMagnitude = ref(1)
@@ -155,7 +128,7 @@ const toolbarVisible = computed(() => {
   return sceneObjects?.value?.selectedId.value !== null
 })
 
-const currentMode = ref('translate')
+const currentMode = ref('none')
 //const toolbarOffset = 50
 const isForceSelected = computed(() => {
   if (!sceneObjects?.value) return false
@@ -172,6 +145,7 @@ function setPrimitive(primitive: PrimitiveType) {
 
 function reset() {
   modifyingForces.value = false
+  currentMode.value = 'none'
   if (forceMagnitude.value === 1.0) return
   ignoreForceWatch = true
   forceMagnitude.value = 1.0
@@ -231,6 +205,10 @@ watch(
 </script>
 
 <style scoped>
+h2 {
+  text-align: center;
+}
+
 .toolbar {
   top: 50%; /* move top edge to vertical center */
   right: 0; /* stick to right edge */

@@ -194,30 +194,26 @@
       <div class="tab" v-if="addRemoveTabOpen">
         <hr />
         <span class="form-group-left">
-          <div class="button-container">
-            <button class="transparent-btn" @click="add('support')">
-              <img src="@/assets/icons/support.svg" />
-            </button>
-            <span class="button-hint">Add Support</span>
-          </div>
-          <div class="button-container">
-            <button class="transparent-btn" @click="add('force')">
-              <img src="@/assets/icons/force.svg" />
-            </button>
-            <span class="button-hint">Add Force</span>
-          </div>
-          <div class="button-container">
-            <button class="transparent-btn" @click="add('obstacle')">
-              <img src="@/assets/icons/obstacle.svg" width="48px" height="48px" />
-            </button>
-            <span class="button-hint">Add Keepout</span>
-          </div>
-          <div class="button-container">
-            <button class="transparent-btn" @click="removeSelected">
-              <img src="@/assets/icons/delete.svg" />
-            </button>
-            <span class="button-hint">Delete Selected</span>
-          </div>
+          <IconButton
+            @clicked="add('support')"
+            image-src="src/assets/icons/support.svg"
+            text="Add Support"
+          ></IconButton>
+          <IconButton
+            @clicked="add('force')"
+            image-src="src/assets/icons/force.svg"
+            text="Add Force"
+          ></IconButton>
+          <IconButton
+            @clicked="add('obstacle')"
+            image-src="src/assets/icons/obstacle.svg"
+            text="Add Void"
+          ></IconButton>
+          <IconButton
+            @clicked="removeSelected"
+            image-src="src/assets/icons/delete.svg"
+            text="Delete Selected"
+          ></IconButton>
         </span>
       </div>
     </div>
@@ -316,6 +312,7 @@ import type { ShallowRef } from 'vue'
 import ProgressBar from './progressBar.vue'
 import type { ObjectCategory } from '@/types/editor'
 import HelpMenu from './helpMenu.vue'
+import IconButton from './iconButton.vue'
 
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
