@@ -727,7 +727,6 @@ function saveResults() {
   text-align: center;
   overflow-y: auto;
   max-height: calc(100vh - 40px);
-  max-width: 50%;
   box-sizing: border-box;
 }
 
