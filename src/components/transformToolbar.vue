@@ -6,37 +6,37 @@
       <IconButton
         :activated="currentMode === 'translate'"
         @clicked="setMode('translate')"
-        image-src="src/assets/icons/move.png"
+        :image-src="MoveIcon"
         text="Move"
       ></IconButton>
       <IconButton
         :activated="currentMode === 'rotate'"
         @clicked="setMode('rotate')"
-        image-src="src/assets/icons/rotate.png"
+        :image-src="RotateIcon"
         text="Rotate"
       ></IconButton>
       <IconButton
         :activated="currentMode === 'scale'"
         @clicked="setMode('scale')"
-        image-src="src/assets/icons/scale.png"
+        :image-src="ScaleIcon"
         text="Scale"
       ></IconButton>
       <IconButton
         :activated="sceneObjects?.selectedObj.value?.primitive === 'cube'"
         @clicked="setPrimitive('cube')"
-        image-src="src/assets/icons/cube.svg"
+        :image-src="CubeIcon"
         text="Type = Cube"
       ></IconButton>
       <IconButton
         :activated="sceneObjects?.selectedObj.value?.primitive === 'cylinder'"
         @clicked="setPrimitive('cylinder')"
-        image-src="src/assets/icons/cylinder.svg"
+        :image-src="CylinderIcon"
         text="Type = Cylinder"
       ></IconButton>
       <IconButton
         :activated="sceneObjects?.selectedObj.value?.primitive === 'sphere'"
         @clicked="setPrimitive('sphere')"
-        image-src="src/assets/icons/sphere.svg"
+        :image-src="SphereIcon"
         text="Type = Sphere"
       ></IconButton>
     </div>
@@ -44,7 +44,7 @@
       <IconButton
         :activated="modifyingForces"
         @clicked="modifyForces()"
-        image-src="src/assets/icons/forces.png"
+        :image-src="ForceIcon"
         text="Modify Forces"
       ></IconButton>
       <div v-if="modifyingForces" class="sub-toolbar">
@@ -114,6 +114,13 @@ import type { ShallowRef } from 'vue'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 import type { PrimitiveType } from '@/types/editor'
 import IconButton from './iconButton.vue'
+import MoveIcon from '@/assets/icons/move.png'
+import RotateIcon from '@/assets/icons/rotate.png'
+import ScaleIcon from '@/assets/icons/scale.png'
+import CubeIcon from '@/assets/icons/cube.svg'
+import CylinderIcon from '@/assets/icons/cylinder.svg'
+import SphereIcon from '@/assets/icons/sphere.svg'
+import ForceIcon from '@/assets/icons/forces.png'
 
 const sceneObjects = inject<ShallowRef<ReturnType<typeof useSceneObjects> | null>>('sceneObjects')
 const selectedCategory = computed(() => {
