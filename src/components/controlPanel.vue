@@ -232,10 +232,18 @@
         <span class="form-group-left">
           <input
             type="checkbox"
-            @click="$emit('update:resultsVisible', !resultsVisible)"
-            :checked="resultsVisible"
+            @click="$emit('update:resultsVoxelFieldVisible', !resultsVoxelFieldVisible)"
+            :checked="resultsVoxelFieldVisible"
           />
-          <label class="toolbar-label">Results</label>
+          <label class="toolbar-label">Results Density Field</label>
+        </span>
+        <span class="form-group-left">
+          <input
+            type="checkbox"
+            @click="$emit('update:resultsMeshVisible', !resultsMeshVisible)"
+            :checked="resultsMeshVisible"
+          />
+          <label class="toolbar-label">Results Mesh</label>
         </span>
       </div>
       <div class="tab" v-if="infoTabOpen" @mousedown.stop @click.stop @mousemove.stop>
@@ -311,7 +319,8 @@ defineProps<{
   autorotate: boolean
   designSpaceVisible: boolean
   designConditionsVisible: boolean
-  resultsVisible: boolean
+  resultsMeshVisible: boolean
+  resultsVoxelFieldVisible: boolean
 }>()
 
 const emit = defineEmits<{
@@ -326,7 +335,8 @@ const emit = defineEmits<{
   (e: 'update:autorotate', value: boolean): void
   (e: 'update:designSpaceVisible', value: boolean): void
   (e: 'update:designConditionsVisible', value: boolean): void
-  (e: 'update:resultsVisible', value: boolean): void
+  (e: 'update:resultsMeshVisible', value: boolean): void
+  (e: 'update:resultsVoxelFieldVisible', value: boolean): void
 }>()
 
 //local UI state

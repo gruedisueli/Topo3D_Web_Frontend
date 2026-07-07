@@ -20,7 +20,8 @@
       v-model:autorotate="autoRotate"
       v-model:design-space-visible="designSpaceVisible"
       v-model:design-conditions-visible="designConditionsVisible"
-      v-model:results-visible="resultsVisible"
+      v-model:results-mesh-visible="resultsMeshVisible"
+      v-model:results-voxel-field-visible="resultsVoxelFieldVisible"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
@@ -75,7 +76,8 @@ const autoRotateDelayTime = 60000 //milliseconds
 const autoRotate = ref(true)
 const designSpaceVisible = ref(true)
 const designConditionsVisible = ref(true)
-const resultsVisible = ref(true)
+const resultsMeshVisible = ref(true)
+const resultsVoxelFieldVisible = ref(true)
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
@@ -366,10 +368,10 @@ function handleStop() {
   optimizer.stop()
 }
 
-watch(optimizer.status, (currentStatus) => {
-  if (currentStatus != 'complete') return
-  voxelVisualization.value?.clear()
-})
+// watch(optimizer.status, (currentStatus) => {
+//   if (currentStatus != 'complete') return
+//   voxelVisualization.value?.clear()
+// })
 
 watch(
   () => sceneObjects?.value?.objects,
@@ -396,8 +398,12 @@ watch(designConditionsVisible, (visible) => {
   voxelVisualization.value?.showHideVoxels(visible)
 })
 
-watch(resultsVisible, (visible) => {
+watch(resultsMeshVisible, (visible) => {
   resultsVisualization.value?.showHideResults(visible)
+})
+
+watch(resultsVoxelFieldVisible, (visible) => {
+  voxelVisualization.value?.showHideResults(visible)
 })
 
 function handleDimensionsUpdate(dims: { nelx: number; nely: number; nelz: number }) {

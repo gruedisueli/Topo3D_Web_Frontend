@@ -204,6 +204,11 @@ export function useVoxelVisualization(
     voxelFieldMesh.value.visible = show
   }
 
+  function showHideResults(show: boolean) {
+    if (!iterationsMesh.value) return
+    iterationsMesh.value.visible = show
+  }
+
   function showHideVoxels(show: boolean) {
     if (supportsMesh.value) supportsMesh.value.visible = show
     if (obstaclesMesh.value) obstaclesMesh.value.visible = show
@@ -280,5 +285,5 @@ export function useVoxelVisualization(
   )
 
   updateVoxelField()
-  return { clear, showHideVoxelField, showHideVoxels }
+  return { clear, showHideVoxelField, showHideVoxels, showHideResults }
 }
