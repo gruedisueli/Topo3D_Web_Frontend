@@ -224,6 +224,45 @@ h2 {
   flex-direction: column; /* arrange buttons vertically */
   border-radius: 8px 0 0 8px;
   text-align: center;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Shorter screens: scale everything down so it fits without scrolling */
+@media (max-height: 700px) {
+  .toolbar {
+    max-height: none;
+    overflow-y: visible;
+    transform: translateY(-50%) scale(0.85);
+    transform-origin: right center;
+  }
+}
+
+@media (max-height: 600px) {
+  .toolbar {
+    max-height: none;
+    overflow-y: visible;
+    transform: translateY(-50%) scale(0.75);
+    transform-origin: right center;
+  }
+}
+
+@media (max-height: 480px) {
+  .toolbar {
+    max-height: none;
+    overflow-y: visible;
+    transform: translateY(-50%) scale(0.5);
+    transform-origin: right center;
+  }
+}
+
+@media (max-height: 380px) {
+  .toolbar {
+    max-height: none;
+    overflow-y: visible;
+    transform: translateY(-50%) scale(0.4);
+    transform-origin: right center;
+  }
 }
 
 .transparent-btn.uninverted {
