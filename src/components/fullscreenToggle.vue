@@ -12,7 +12,7 @@ import FullscreenIcon from '@/assets/icons/fullscreen.svg'
 <style scoped>
 .button-wrapper {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  bottom: 50px;
+  left: 50px;
 }
 </style>
