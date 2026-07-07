@@ -6,6 +6,7 @@
     @mouseleave="onMouseLeave"
     @mousedown="onMouseDown"
     @click="onCanvasClick"
+    @touchmove="onTouchMove"
   >
     <ControlPanel
       @start="handleStart"
@@ -247,6 +248,10 @@ function onMouseMove(event: MouseEvent) {
     -((event.clientY - rect.top) / rect.height) * 2 + 1,
   )
   hover.value?.mouseMoveHover()
+  resetAutoRotateTimer()
+}
+
+function onTouchMove() {
   resetAutoRotateTimer()
 }
 
