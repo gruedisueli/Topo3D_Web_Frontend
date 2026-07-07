@@ -290,7 +290,7 @@ export function useSceneObjects(
     activeControls.translationSnap = 0.5
     activeControls.scaleSnap = 0.5
     activeControls.rotationSnap = Math.PI / 16
-    activeControls.minx = 0.5 //minX is not found by IDE but it exists and works
+    activeControls.minX = 0.5 //minX is not found by IDE but it exists and works
     activeControls.minY = 0.5
     activeControls.minZ = 0.5
     activeControls.maxX = (nx.value ?? Infinity) - 0.5
