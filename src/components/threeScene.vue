@@ -18,6 +18,7 @@
       @stl-loaded="handleStlLoaded"
       @save-results="handleSaveResults"
       @update:scaling-matrix="handleUpdateScalingMatrix"
+      @update:fullscreen="toggleFullscreen()"
       v-model:autorotate="autoRotate"
       v-model:design-space-visible="designSpaceVisible"
       v-model:design-conditions-visible="designConditionsVisible"
@@ -30,7 +31,6 @@
     />
     <OrbitHints></OrbitHints>
     <ObjectHint></ObjectHint>
-    <FullscreenToggle @update:fullscreen="toggleFullscreen()"></FullscreenToggle>
   </div>
 </template>
 
@@ -54,7 +54,6 @@ import { RenderPass } from 'three/examples/jsm/Addons.js'
 import { OutlinePass } from 'three/examples/jsm/Addons.js'
 import { OutputPass } from 'three/examples/jsm/Addons.js'
 import ObjectHint from './objectHint.vue'
-import FullscreenToggle from './fullscreenToggle.vue'
 
 const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)

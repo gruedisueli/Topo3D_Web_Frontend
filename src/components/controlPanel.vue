@@ -39,6 +39,7 @@
         @clicked="clickInfo()"
         :image-src="InfoIcon"
       ></IconButton>
+      <IconButton @clicked="$emit('update:fullscreen')" :image-src="FullscreenIcon"></IconButton>
     </div>
     <div class="tab-container" v-if="tabOpen">
       <div class="tab start" v-if="startStopTabOpen" @mousedown.stop @click.stop @mousemove.stop>
@@ -304,6 +305,7 @@ import InfoIcon from '@/assets/icons/info.svg'
 import OpenIcon from '@/assets/icons/folder.svg'
 import DimensionIcon from '@/assets/icons/dimensions.svg'
 import StartStopIcon from '@/assets/icons/play-stop.svg'
+import FullscreenIcon from '@/assets/icons/fullscreen.svg'
 
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
@@ -337,6 +339,7 @@ const emit = defineEmits<{
   (e: 'update:designConditionsVisible', value: boolean): void
   (e: 'update:resultsMeshVisible', value: boolean): void
   (e: 'update:resultsVoxelFieldVisible', value: boolean): void
+  (e: 'update:fullscreen'): void
 }>()
 
 //local UI state
