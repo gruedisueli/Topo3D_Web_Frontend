@@ -10,9 +10,9 @@
         :image-src="StartStopIcon"
       ></IconButton>
       <IconButton
-        :activated="dimensionsTabOpen"
-        @clicked="clickDimensions()"
-        :image-src="DimensionIcon"
+        :activated="addRemoveTabOpen"
+        @clicked="clickAddRemove()"
+        :image-src="AddRemoveIcon"
       ></IconButton>
       <IconButton
         :activated="loadTabOpen"
@@ -20,14 +20,14 @@
         :image-src="OpenIcon"
       ></IconButton>
       <IconButton
+        :activated="dimensionsTabOpen"
+        @clicked="clickDimensions()"
+        :image-src="DimensionIcon"
+      ></IconButton>
+      <IconButton
         :activated="advancedTabOpen"
         @clicked="clickAdvanced()"
         :image-src="AdvancedIcon"
-      ></IconButton>
-      <IconButton
-        :activated="addRemoveTabOpen"
-        @clicked="clickAddRemove()"
-        :image-src="AddRemoveIcon"
       ></IconButton>
       <IconButton
         :activated="visibilityTabOpen"
@@ -41,7 +41,7 @@
       ></IconButton>
     </div>
     <div class="tab-container" v-if="tabOpen">
-      <div class="tab" v-if="startStopTabOpen" @mousedown.stop @click.stop @mousemove.stop>
+      <div class="tab start" v-if="startStopTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <button class="simple-button" @click="start" v-if="!optimizerRunning">Start</button>
         <button class="simple-button" @click="stop" v-if="optimizerRunning">Stop</button>
         <div
@@ -195,24 +195,22 @@
         </span>
       </div>
       <div class="tab" v-if="addRemoveTabOpen" @mousedown.stop @click.stop @mousemove.stop>
-        <span class="form-group-left">
-          <IconButton
-            @clicked="add('support')"
-            :image-src="SupportIcon"
-            text="Add Support"
-          ></IconButton>
-          <IconButton @clicked="add('force')" :image-src="ForceIcon" text="Add Force"></IconButton>
-          <IconButton
-            @clicked="add('obstacle')"
-            :image-src="ObstacleIcon"
-            text="Add Void"
-          ></IconButton>
-          <IconButton
-            @clicked="removeSelected"
-            :image-src="DeleteIcon"
-            text="Delete Selected"
-          ></IconButton>
-        </span>
+        <IconButton
+          @clicked="add('support')"
+          :image-src="SupportIcon"
+          text="Add Support"
+        ></IconButton>
+        <IconButton @clicked="add('force')" :image-src="ForceIcon" text="Add Force"></IconButton>
+        <IconButton
+          @clicked="add('obstacle')"
+          :image-src="ObstacleIcon"
+          text="Add Void"
+        ></IconButton>
+        <IconButton
+          @clicked="removeSelected"
+          :image-src="DeleteIcon"
+          text="Delete Selected"
+        ></IconButton>
       </div>
       <div class="tab" v-if="visibilityTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <span class="form-group-left">
@@ -436,44 +434,45 @@ const removeSelected = () => {
     sceneObjects.value.removeObject(sceneObjects.value.selectedId.value)
 }
 
-function closeAllTabs() {
+function closeAllOtherTabs(currentTab: Ref<boolean>) {
   for (const tab of tabStatuses) {
+    if (tab === currentTab) continue
     tab.value = false
   }
 }
 
 function clickStartStop() {
-  closeAllTabs()
+  closeAllOtherTabs(startStopTabOpen)
   startStopTabOpen.value = !startStopTabOpen.value
 }
 
 function clickDimensions() {
-  closeAllTabs()
+  closeAllOtherTabs(dimensionsTabOpen)
   dimensionsTabOpen.value = !dimensionsTabOpen.value
 }
 
 function clickLoad() {
-  closeAllTabs()
+  closeAllOtherTabs(loadTabOpen)
   loadTabOpen.value = !loadTabOpen.value
 }
 
 function clickAdvanced() {
-  closeAllTabs()
+  closeAllOtherTabs(advancedTabOpen)
   advancedTabOpen.value = !advancedTabOpen.value
 }
 
 function clickInfo() {
-  closeAllTabs()
+  closeAllOtherTabs(infoTabOpen)
   infoTabOpen.value = !infoTabOpen.value
 }
 
 function clickVisibility() {
-  closeAllTabs()
+  closeAllOtherTabs(visibilityTabOpen)
   visibilityTabOpen.value = !visibilityTabOpen.value
 }
 
 function clickAddRemove() {
-  closeAllTabs()
+  closeAllOtherTabs(addRemoveTabOpen)
   addRemoveTabOpen.value = !addRemoveTabOpen.value
 }
 
@@ -770,12 +769,16 @@ function saveResults() {
   font-weight: bold;
 }
 
+.tab.start {
+  width: 300px;
+}
+
 .tab-container {
   position: relative;
   flex-direction: column;
   border-radius: 8px 8px 8px 8px;
   height: fit-content;
-  width: 300px;
+  max-width: 300px;
   display: flex;
   gap: 10px;
   background: #333;
