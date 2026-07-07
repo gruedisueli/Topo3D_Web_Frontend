@@ -780,7 +780,7 @@ function saveResults() {
 }
 
 .tab.start {
-  width: 300px;
+  width: min(300px, calc(50vw - 40px));
 }
 
 .tab-container {
