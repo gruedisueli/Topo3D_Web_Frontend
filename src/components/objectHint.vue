@@ -23,7 +23,9 @@ const hoveredType = computed(() => {
   const obj = sceneObjects?.value?.objects.value.find(
     (o) => o.id === hover?.value?.hoveredObjectId.value,
   )
-  return obj?.category
+  let cat: string = obj?.category as string
+  if (cat === 'obstacle') cat = 'void'
+  return cat
 })
 </script>
 
