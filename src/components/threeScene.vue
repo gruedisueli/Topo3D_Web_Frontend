@@ -30,6 +30,7 @@
     />
     <OrbitHints></OrbitHints>
     <ObjectHint></ObjectHint>
+    <FullscreenToggle @update:fullscreen="toggleFullscreen()"></FullscreenToggle>
   </div>
 </template>
 
@@ -53,6 +54,7 @@ import { RenderPass } from 'three/examples/jsm/Addons.js'
 import { OutlinePass } from 'three/examples/jsm/Addons.js'
 import { OutputPass } from 'three/examples/jsm/Addons.js'
 import ObjectHint from './objectHint.vue'
+import FullscreenToggle from './fullscreenToggle.vue'
 
 const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)
@@ -127,6 +129,16 @@ function resetAutoRotateTimer() {
   userIdle.value = false
   clearTimeout(autoRotateTimeout)
   autoRotateTimeout = setTimeout(startAutoRotate, autoRotateDelayTime)
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch((err) => {
+      console.error(`Error enabling fullscreen: ${err.message}`)
+    })
+  } else {
+    document.exitFullscreen()
+  }
 }
 
 onMounted(() => {
