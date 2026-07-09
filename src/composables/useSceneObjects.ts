@@ -8,6 +8,8 @@ import {
 import type { EditorObject, ObjectCategory, PrimitiveType } from '@/types/editor'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 import type { SavedScene } from '@/types/scene'
+import type { ObjectForceState, ObjectTransformState, SceneAction } from '@/types/sceneActions'
+import { cloneEditorObject } from '@/types/editor'
 
 export function useSceneObjects(
   scene: ShallowRef<THREE.Scene | null>,
@@ -29,6 +31,9 @@ export function useSceneObjects(
   const head = new THREE.ConeGeometry(0.5, 1)
   head.translate(0, 10, 0)
   const arrMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
+  let undoStack: SceneAction[] = []
+  let currentUndoDepth = 0 //reverse indexing from end of undoStack
+  let recordUndoRedo = true
   forceSelectablePrefab.add(new THREE.Mesh(stem, arrMat))
   forceSelectablePrefab.add(new THREE.Mesh(head, arrMat))
   forceSelectablePrefab.visible = false
@@ -40,7 +45,110 @@ export function useSceneObjects(
   const nz = nelz
   const forceColor = 0xff0000
   const wireframeColor = 0xffffff
-  //let prevInvRot = new THREE.Quaternion()
+  let prevTransform: ObjectTransformState = {
+    position: new THREE.Vector3(),
+    quaternion: new THREE.Quaternion(),
+    scale: new THREE.Vector3(),
+  }
+  let prevForceState: ObjectForceState = {
+    arrowQuaternion: new THREE.Quaternion(),
+    force: new THREE.Vector3(),
+  }
+
+  function undoRedo(undo: boolean) {
+    console.log('undo: ' + undo)
+    recordUndoRedo = false
+    if (undo) {
+      if (currentUndoDepth >= undoStack.length) {
+        recordUndoRedo = true
+        return
+      }
+      currentUndoDepth++
+    } else {
+      if (currentUndoDepth === 0) {
+        recordUndoRedo = true
+        return
+      }
+    }
+    const sceneAction = undoStack[undoStack.length - currentUndoDepth]
+    switch (sceneAction?.type) {
+      case 'add':
+      case 'remove':
+        const obj = sceneAction.data as EditorObject
+        if (!obj) {
+          console.error('scene action object is invalid')
+          recordUndoRedo = true
+          return
+        }
+        if (sceneAction.type === 'add') {
+          if (undo) {
+            removeObject(sceneAction.id)
+          } else {
+            addObject(obj.category, obj.primitive, obj.transform, obj.id)
+          }
+        } else {
+          if (undo) {
+            addObject(obj.category, obj.primitive, obj.transform, obj.id)
+          } else {
+            removeObject(sceneAction.id)
+          }
+        }
+        break
+      case 'primitive':
+        const primitiveChange = sceneAction.data as [PrimitiveType, PrimitiveType]
+        if (!primitiveChange) {
+          console.error('scene action primitive change is invalid')
+          recordUndoRedo = true
+          return
+        }
+        changePrimitive(sceneAction.id, undo ? primitiveChange[0] : primitiveChange[1])
+        break
+      case 'transform':
+        const transformData = sceneAction.data as [ObjectTransformState, ObjectTransformState]
+        if (!transformData) {
+          console.error('scene action transform matrix is invalid')
+          recordUndoRedo = true
+          return
+        }
+        transformObj(sceneAction.id, undo ? transformData[0] : transformData[1])
+        break
+      case 'direction':
+        const forceStateData = sceneAction.data as [ObjectForceState, ObjectForceState]
+        if (!forceStateData) {
+          console.error('scene action force state data is invalid')
+          recordUndoRedo = true
+          return
+        }
+        transformForceDir(sceneAction.id, undo ? forceStateData[0] : forceStateData[1])
+        break
+      case 'magnitude':
+        const strengthChange = sceneAction.data as [number, number]
+        if (!strengthChange) {
+          console.error('scene action strength change value is invalid')
+          recordUndoRedo = true
+          return
+        }
+        updateForceStrength(sceneAction.id, undo ? strengthChange[0] : strengthChange[1])
+        break
+      default:
+        console.error('unknown undo/redo type')
+        recordUndoRedo = true
+        return
+    }
+    if (!undo) currentUndoDepth--
+    recordUndoRedo = true
+  }
+
+  function pushUndoAction(action: SceneAction) {
+    if (!recordUndoRedo) return
+    console.log('pushing to undo stack')
+    if (currentUndoDepth > 0) {
+      //pop off the end of the stack to the current depth
+      undoStack = undoStack.slice(0, -currentUndoDepth)
+      currentUndoDepth = 0
+    }
+    undoStack.push(action)
+  }
 
   //Helper to create a mesh from EditorObject
   function createMesh(obj: EditorObject): THREE.Mesh {
@@ -85,38 +193,64 @@ export function useSceneObjects(
 
   function changeSelectedPrimitive(primitive: PrimitiveType) {
     if (!selectedId.value || !selectedMesh.value || !selectedObj.value) return
-    selectedObj.value.primitive = primitive
-    const pos = selectedMesh.value.position.clone()
-    const id = selectedId.value
-    selectObject(null)
-    removeMesh(id)
-    const obj = objects.value.find((o) => o.id === id) as EditorObject
-    addMesh(obj, pos)
+    pushUndoAction({
+      type: 'primitive',
+      id: selectedId.value,
+      data: [selectedObj.value.primitive, primitive],
+    })
+    changeObjPrimitive(selectedObj.value, primitive)
   }
 
-  function addObject(category: ObjectCategory, primitive: PrimitiveType, position?: THREE.Vector3) {
-    const id = crypto.randomUUID() as string
-    const pos = position || new THREE.Vector3(0, 0, 0)
+  function changePrimitive(id: string, primitive: PrimitiveType) {
+    const obj = objects.value.find((o) => o.id === id)
+    if (!obj) return
+    changeObjPrimitive(obj, primitive)
+  }
+
+  function changeObjPrimitive(obj: EditorObject, primitive: PrimitiveType) {
+    obj.primitive = primitive
+    const id = obj.id
+    const mesh = scene?.value?.children.find((c) => c.userData?.id === id) as THREE.Mesh
+    if (!mesh) return
+    selectObject(null)
+    removeMesh(id)
+    addMesh(obj)
+  }
+
+  function addObject(
+    category: ObjectCategory,
+    primitive: PrimitiveType,
+    transform?: THREE.Matrix4,
+    id?: string,
+  ) {
+    id = id ?? (crypto.randomUUID() as string)
+    const xForm = transform ?? new THREE.Matrix4()
     const obj: EditorObject = {
       id,
       category,
       primitive,
-      transform: new THREE.Matrix4(),
+      transform: xForm.clone(),
     }
     if (category === 'force') {
       obj.forceVector = new THREE.Vector3(0, 1, 0)
     }
+    pushUndoAction({ type: 'add', id: obj.id, data: cloneEditorObject(obj) })
     objects.value.push(obj)
-    addMesh(obj, pos)
+    addMesh(obj)
     return id
   }
 
-  function addMesh(obj: EditorObject, position?: THREE.Vector3) {
+  function addMesh(obj: EditorObject) {
     const id = obj.id
     const mesh = createMesh(obj)
     scene?.value?.add(mesh)
     if (obj.category === 'force') {
-      const arrow = new THREE.ArrowHelper(obj.forceVector?.clone(), position, 1, 0xff0000)
+      const arrow = new THREE.ArrowHelper(
+        obj.forceVector?.clone(),
+        mesh.position.clone(),
+        1,
+        0xff0000,
+      )
       arrow.userData = { parentId: id, type: 'direction' }
       scene?.value?.add(arrow)
       directionArrow.value = arrow
@@ -156,6 +290,9 @@ export function useSceneObjects(
   }
 
   function removeObject(id: string) {
+    const obj = objects.value.find((o) => o.id === id)
+    if (!obj) return
+    pushUndoAction({ type: 'remove', id: id, data: cloneEditorObject(obj) })
     removeMesh(id)
     objects.value = objects.value.filter((o) => o.id !== id)
     if (selectedId.value === id) selectObject(null)
@@ -298,17 +435,46 @@ export function useSceneObjects(
     activeControls.maxZ = (nz.value ?? Infinity) - 0.5
     activeControls.attach(isForce ? directionArrow.value! : selectedMesh.value)
     activeControls.addEventListener('dragging-changed', (event) => {
-      // if (event.value && activeControls) {
-      //   prevInvRot = activeControls.object.quaternion.clone().invert()
-      // }
+      if (!activeControls) return
+      const targetMesh = activeControls.object
+      if (event.value) {
+        if (mode !== 'force_rotate')
+          prevTransform = {
+            position: targetMesh.position.clone(),
+            quaternion: targetMesh.quaternion.clone(),
+            scale: targetMesh.scale.clone(),
+          }
+        else if (directionArrow.value && selectedObj.value?.forceVector)
+          prevForceState = {
+            arrowQuaternion: directionArrow.value.quaternion.clone(),
+            force: selectedObj.value.forceVector.clone(),
+          }
+      }
       if (orbitControls.value) orbitControls.value.enabled = !event.value
       isDragging.value = event.value as boolean
       if (!event.value) {
-        // //adjust the direction arrow the amount of the parent's rotation
-        // if (!isForce && tMode === 'rotate' && directionArrow.value && selectedMesh.value) {
-        //   const deltaRot = selectedMesh.value.quaternion.clone().multiply(prevInvRot)
-        //   directionArrow.value.quaternion.premultiply(deltaRot)
-        // }
+        if (mode !== 'force_rotate') {
+          const currentTransform = {
+            position: targetMesh.position.clone(),
+            quaternion: targetMesh.quaternion.clone(),
+            scale: targetMesh.scale.clone(),
+          }
+          pushUndoAction({
+            type: 'transform',
+            id: selectedId.value!,
+            data: [prevTransform, currentTransform],
+          })
+        } else if (directionArrow.value && selectedObj.value?.forceVector) {
+          const currentForceState: ObjectForceState = {
+            arrowQuaternion: directionArrow.value.quaternion.clone(),
+            force: selectedObj.value.forceVector.clone(),
+          }
+          pushUndoAction({
+            type: 'direction',
+            id: selectedId.value!,
+            data: [prevForceState, currentForceState],
+          })
+        }
         syncFromScene()
       }
     })
@@ -339,18 +505,64 @@ export function useSceneObjects(
     }
   }
 
+  function transformObj(id: string, transform: ObjectTransformState) {
+    const obj = objects.value.find((o) => o.id === id)
+    const mesh = scene?.value?.children.find((c) => c.userData?.id === id) as THREE.Mesh
+    if (!obj || !mesh) return
+    const mat = new THREE.Matrix4()
+    mat.compose(transform.position, transform.quaternion, transform.scale)
+    obj.transform = mat.clone()
+    mesh.position.copy(transform.position)
+    mesh.quaternion.copy(transform.quaternion)
+    mesh.scale.copy(transform.scale)
+    //force Three.js to immediately re-bake the matrix from these vectors
+    mesh.updateMatrix()
+    mesh.updateMatrixWorld(true)
+    if (obj.forceVector) {
+      const arrow = scene?.value?.children.find(
+        (c) => c.userData?.parentId === id,
+      ) as THREE.ArrowHelper
+      if (arrow) {
+        arrow.position.copy(transform.position)
+        //only update position as rotation of the arrow is handled separately.
+        arrow.updateMatrix()
+        arrow.updateMatrixWorld(true)
+      }
+    }
+  }
+
+  function transformForceDir(id: string, forceState: ObjectForceState) {
+    const obj = objects.value.find((o) => o.id === id)
+    const arrow = scene?.value?.children?.find((o) => o.userData?.parentId === id)
+    if (!obj || !arrow || !obj.forceVector) return
+    obj.forceVector = forceState.force
+    arrow.quaternion.copy(forceState.arrowQuaternion)
+    arrow.updateMatrix()
+    arrow.updateMatrixWorld(true)
+  }
+
   //update the strength of force objects
-  function updateForceStrength(strength: number) {
-    if (!selectedId.value || !selectedMesh.value || !directionArrow.value) return
-    const obj = objects.value.find((o) => o.id === selectedId.value)
-    if (!obj || !obj.forceVector) return
+  function updateForceStrengthGui(strength: number) {
+    if (!selectedId.value) return
+    updateForceStrength(selectedId.value, strength)
+  }
+
+  function updateForceStrength(id: string, strength: number) {
+    const obj = objects.value.find((o) => o.id === id)
+    const arrow = scene?.value?.children?.find(
+      (o) => o.userData?.parentId === id,
+    ) as THREE.ArrowHelper
+    if (!obj || !obj.forceVector || !arrow) return
+    pushUndoAction({
+      type: 'magnitude',
+      id: id,
+      data: [obj.forceVector.length(), strength],
+    })
     const forceVec = new THREE.Vector3(obj.forceVector.x, obj.forceVector.y, obj.forceVector.z)
     forceVec.normalize()
     forceVec.multiplyScalar(strength)
-    console.log('change strength,oldvec', obj.forceVector)
-    console.log('change strength,newvec', forceVec)
     obj.forceVector = forceVec
-    directionArrow.value.setLength(strength)
+    arrow.setLength(strength)
   }
 
   function loadSceneFromData(sceneData: SavedScene) {
@@ -402,9 +614,25 @@ export function useSceneObjects(
     sourceVec.normalize()
     const quaternion = new THREE.Quaternion()
     quaternion.setFromUnitVectors(sourceVec, targetVec)
+    const tMatrix = new THREE.Matrix4()
+    tMatrix.makeRotationFromQuaternion(quaternion)
+    prevForceState = {
+      arrowQuaternion: directionArrow.value.quaternion.clone(),
+      force: selectedObj.value.forceVector.clone(),
+    }
     directionArrow.value.applyQuaternion(quaternion)
     forceSelectablePrefab.applyQuaternion(quaternion)
     syncFromScene()
+    //sync from scene before updating the undo log so that selected object is updated.
+    const newForceState: ObjectForceState = {
+      arrowQuaternion: directionArrow.value.quaternion.clone(),
+      force: selectedObj.value.forceVector.clone(),
+    }
+    pushUndoAction({
+      type: 'direction',
+      id: selectedObj.value.id,
+      data: [prevForceState, newForceState],
+    })
   }
 
   function showHideSceneObjects(show: boolean) {
@@ -428,7 +656,7 @@ export function useSceneObjects(
     syncFromScene,
     pickObject,
     showTransformControls,
-    updateForceStrength,
+    updateForceStrength: updateForceStrengthGui,
     clearAllObjects,
     loadSceneFromData,
     changeSelectedPrimitive,
@@ -436,5 +664,6 @@ export function useSceneObjects(
     setForceDir,
     removeControls,
     showHideSceneObjects,
+    undoRedo,
   }
 }

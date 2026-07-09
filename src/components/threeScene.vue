@@ -24,6 +24,8 @@
       v-model:design-conditions-visible="designConditionsVisible"
       v-model:results-mesh-visible="resultsMeshVisible"
       v-model:results-voxel-field-visible="resultsVoxelFieldVisible"
+      @undo="undoRedo(true)"
+      @redo="undoRedo(false)"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
@@ -54,6 +56,7 @@ import { RenderPass } from 'three/examples/jsm/Addons.js'
 import { OutlinePass } from 'three/examples/jsm/Addons.js'
 import { OutputPass } from 'three/examples/jsm/Addons.js'
 import ObjectHint from './objectHint.vue'
+import { useMagicKeys, whenever } from '@vueuse/core'
 
 const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)
@@ -80,6 +83,24 @@ const designSpaceVisible = ref(true)
 const designConditionsVisible = ref(true)
 const resultsMeshVisible = ref(true)
 const resultsVoxelFieldVisible = ref(true)
+const { ctrl_z, ctrl_y, meta_z, meta_shift_z, meta_y, ctrl_shift_z } = useMagicKeys()
+
+whenever(
+  () => ctrl_z?.value || meta_z?.value,
+  () => {
+    undoRedo(true)
+  },
+)
+
+whenever(
+  () => ctrl_y?.value || ctrl_shift_z?.value || meta_shift_z?.value || meta_y?.value,
+  () => {
+    undoRedo(false)
+  },
+)
+function undoRedo(undo: boolean) {
+  sceneObjects.value?.undoRedo(undo)
+}
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
