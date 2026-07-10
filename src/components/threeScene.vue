@@ -84,8 +84,20 @@ const designSpaceVisible = ref(true)
 const designConditionsVisible = ref(true)
 const resultsMeshVisible = ref(true)
 const resultsVoxelFieldVisible = ref(true)
-const { ctrl_z, ctrl_y, meta_z, meta_shift_z, meta_y, ctrl_shift_z, Backspace, Delete } =
-  useMagicKeys()
+const {
+  ctrl_z,
+  ctrl_y,
+  meta_z,
+  meta_shift_z,
+  meta_y,
+  ctrl_shift_z,
+  ctrl_c,
+  meta_c,
+  ctrl_v,
+  meta_v,
+  Backspace,
+  Delete,
+} = useMagicKeys()
 
 whenever(
   () => ctrl_z?.value || meta_z?.value,
@@ -109,6 +121,27 @@ whenever(
     removeSelected()
   },
 )
+
+whenever(
+  () => ctrl_c?.value || meta_c?.value,
+  () => {
+    copySelected()
+  },
+)
+function copySelected() {
+  sceneObjects.value?.copySelected()
+}
+
+whenever(
+  () => ctrl_v?.value || meta_v?.value,
+  () => {
+    pasteCopied()
+  },
+)
+function pasteCopied() {
+  sceneObjects.value?.pasteCopied()
+}
+
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 

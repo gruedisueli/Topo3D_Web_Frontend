@@ -45,6 +45,7 @@ export function useSceneObjects(
   const nz = nelz
   const forceColor = 0xff0000
   const wireframeColor = 0xffffff
+  let copiedObj: EditorObject | null = null
   let prevTransform: ObjectTransformState = {
     position: new THREE.Vector3(),
     quaternion: new THREE.Quaternion(),
@@ -53,6 +54,22 @@ export function useSceneObjects(
   let prevForceState: ObjectForceState = {
     arrowQuaternion: new THREE.Quaternion(),
     force: new THREE.Vector3(),
+  }
+
+  function copySelected() {
+    if (!selectedObj.value) return
+    copiedObj = cloneEditorObject(selectedObj.value)
+  }
+
+  function pasteCopied() {
+    if (!copiedObj) return
+    addObject(
+      copiedObj.category,
+      copiedObj.primitive,
+      copiedObj.transform,
+      undefined,
+      copiedObj.forceVector,
+    )
   }
 
   function undoRedo(undo: boolean) {
@@ -666,5 +683,7 @@ export function useSceneObjects(
     removeControls,
     showHideSceneObjects,
     undoRedo,
+    copySelected,
+    pasteCopied,
   }
 }
