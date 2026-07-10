@@ -26,6 +26,7 @@
       v-model:results-voxel-field-visible="resultsVoxelFieldVisible"
       @undo="undoRedo(true)"
       @redo="undoRedo(false)"
+      @remove="removeSelected()"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
@@ -83,7 +84,8 @@ const designSpaceVisible = ref(true)
 const designConditionsVisible = ref(true)
 const resultsMeshVisible = ref(true)
 const resultsVoxelFieldVisible = ref(true)
-const { ctrl_z, ctrl_y, meta_z, meta_shift_z, meta_y, ctrl_shift_z } = useMagicKeys()
+const { ctrl_z, ctrl_y, meta_z, meta_shift_z, meta_y, ctrl_shift_z, Backspace, Delete } =
+  useMagicKeys()
 
 whenever(
   () => ctrl_z?.value || meta_z?.value,
@@ -101,6 +103,12 @@ whenever(
 function undoRedo(undo: boolean) {
   sceneObjects.value?.undoRedo(undo)
 }
+whenever(
+  () => Backspace?.value || Delete?.value,
+  () => {
+    removeSelected()
+  },
+)
 let autoRotateTimeout = 0
 let inverseScalingMatrix = new THREE.Matrix4()
 
@@ -159,6 +167,11 @@ function toggleFullscreen() {
   } else {
     document.exitFullscreen()
   }
+}
+
+function removeSelected() {
+  if (sceneObjects?.value?.selectedId.value)
+    sceneObjects.value.removeObject(sceneObjects.value.selectedId.value)
 }
 
 onMounted(() => {

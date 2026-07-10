@@ -210,7 +210,7 @@
           text="Add Void"
         ></IconButton>
         <IconButton
-          @clicked="removeSelected"
+          @clicked="$emit('remove')"
           :image-src="DeleteIcon"
           text="Delete Selected"
         ></IconButton>
@@ -346,6 +346,7 @@ const emit = defineEmits<{
   (e: 'update:fullscreen'): void
   (e: 'undo'): void
   (e: 'redo'): void
+  (e: 'remove'): void
 }>()
 
 //local UI state
@@ -446,11 +447,6 @@ const tabOpen = computed(() => {
 
 const add = (category: ObjectCategory) => {
   sceneObjects?.value?.addObject(category, 'cube')
-}
-
-const removeSelected = () => {
-  if (sceneObjects?.value?.selectedId.value)
-    sceneObjects.value.removeObject(sceneObjects.value.selectedId.value)
 }
 
 function closeAllOtherTabs(currentTab: Ref<boolean>) {

@@ -84,11 +84,11 @@ export function useSceneObjects(
           if (undo) {
             removeObject(sceneAction.id)
           } else {
-            addObject(obj.category, obj.primitive, obj.transform, obj.id)
+            addObject(obj.category, obj.primitive, obj.transform, obj.id, obj.forceVector)
           }
         } else {
           if (undo) {
-            addObject(obj.category, obj.primitive, obj.transform, obj.id)
+            addObject(obj.category, obj.primitive, obj.transform, obj.id, obj.forceVector)
           } else {
             removeObject(sceneAction.id)
           }
@@ -222,6 +222,7 @@ export function useSceneObjects(
     primitive: PrimitiveType,
     transform?: THREE.Matrix4,
     id?: string,
+    force?: THREE.Vector3,
   ) {
     id = id ?? (crypto.randomUUID() as string)
     const xForm = transform ?? new THREE.Matrix4()
@@ -232,7 +233,7 @@ export function useSceneObjects(
       transform: xForm.clone(),
     }
     if (category === 'force') {
-      obj.forceVector = new THREE.Vector3(0, 1, 0)
+      obj.forceVector = force ?? new THREE.Vector3(0, 1, 0)
     }
     pushUndoAction({ type: 'add', id: obj.id, data: cloneEditorObject(obj) })
     objects.value.push(obj)
