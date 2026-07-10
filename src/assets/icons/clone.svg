@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="24" width="24">
+  <g id="pathfinder-trim">
+    <path id="Union" fill="#000000" d="M14 2c1.1046 0 2 0.89543 2 2v4h4c1.1046 0 2 0.89543 2 2v10c0 1.1046 -0.8954 2 -2 2H10c-1.10457 0 -2 -0.8954 -2 -2v-4H4c-1.10457 0 -2 -0.8954 -2 -2V4c0 -1.10457 0.89543 -2 2 -2zm-4 18h10V10H10zm-6 -6h4v-4c0 -1.10457 0.89543 -2 2 -2h4V4H4z" stroke-width="1"></path>
+  </g>
+</svg>

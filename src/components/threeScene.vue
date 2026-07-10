@@ -27,6 +27,7 @@
       @undo="undoRedo(true)"
       @redo="undoRedo(false)"
       @remove="removeSelected()"
+      @clone="(copySelected(), pasteCopied())"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
