@@ -7,6 +7,7 @@ const isStarting = ref(false)
 const error = ref<string | null>(null)
 const latestDensityData = ref<Uint8Array | null>(null)
 const iterationCt = ref(0)
+const changeVal = ref(0)
 const latestStlData = ref<ArrayBuffer | null>(null)
 let expectingStl = false
 
@@ -19,6 +20,7 @@ export function useOptimization() {
     isStarting.value = false
     latestDensityData.value = null
     latestStlData.value = null
+    changeVal.value = 0
   }
 
   const connect = (params: Record<string, unknown>) => {
@@ -72,6 +74,10 @@ export function useOptimization() {
           } else {
             ws.value?.close()
           }
+        } else if (msg.status === 'change_update') {
+          //no need to update reported status
+          changeVal.value = msg['change']
+          console.log('change val' + changeVal.value)
         } else if (msg.status === 'error') {
           error.value = msg.message
           status.value = 'error'
@@ -129,5 +135,6 @@ export function useOptimization() {
     latestDensityData,
     latestStlData,
     iterationCt,
+    changeVal,
   }
 }

@@ -61,6 +61,7 @@
         <button class="simple-button" @click="start" v-if="!optimizerRunning">Start</button>
         <button class="simple-button" @click="stop" v-if="optimizerRunning">Stop</button>
         <div
+          class="progress-container"
           v-if="
             optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
           "
@@ -72,6 +73,13 @@
             :indeterminate="optimizer?.status.value !== 'running'"
             :status="optimizer?.status.value"
           />
+          <label class="toolbar-label"
+            >Current Change:
+            {{
+              optimizer?.changeVal != null ? Number(optimizer.changeVal.value).toFixed(2) : ''
+            }}</label
+          >
+          <label class="toolbar-label">Target Change: 0.01</label>
         </div>
         <div class="form-group">
           <button
@@ -827,6 +835,12 @@ function saveResults() {
 .toolbar-label.menu {
   font-size: 18px;
   font-weight: bold;
+}
+
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
 }
 
 .tab.start {
