@@ -749,7 +749,7 @@ function saveResults() {
 }
 
 /* Shorter screens: scale everything down so it fits without scrolling */
-@media (max-height: 700px) {
+@media (max-height: 900px) {
   .main-container {
     max-height: none;
     overflow-y: none;

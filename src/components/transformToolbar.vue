@@ -229,7 +229,7 @@ h2 {
 }
 
 /* Shorter screens: scale everything down so it fits without scrolling */
-@media (max-height: 700px) {
+@media (max-height: 900px) {
   .toolbar {
     max-height: none;
     overflow-y: visible;
