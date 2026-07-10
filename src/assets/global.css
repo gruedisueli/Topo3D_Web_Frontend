@@ -111,6 +111,17 @@ h2 {
   background: white;
   filter: none;
 }
+.transparent-btn:disabled {
+  opacity: 0.3;
+  filter: none;
+  cursor: not-allowed;
+  transform: none;
+  pointer-events: none;
+}
+.transparent-btn:disabled:hover {
+  transform: none;
+  opacity: 0.3;
+}
 
 .button-container {
   display: flex;

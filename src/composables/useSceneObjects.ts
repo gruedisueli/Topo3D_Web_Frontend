@@ -1,4 +1,4 @@
-import { ref, shallowRef } from 'vue'
+import { ref, shallowRef, computed } from 'vue'
 import type { Ref, ShallowRef } from 'vue'
 import * as THREE from 'three'
 import {
@@ -31,8 +31,8 @@ export function useSceneObjects(
   const head = new THREE.ConeGeometry(0.5, 1)
   head.translate(0, 10, 0)
   const arrMat = new THREE.MeshStandardMaterial({ color: 0xff0000 })
-  let undoStack: SceneAction[] = []
-  let currentUndoDepth = 0 //reverse indexing from end of undoStack
+  const undoStack = ref<SceneAction[]>([])
+  const currentUndoDepth = ref(0) //reverse indexing from end of undoStack
   let recordUndoRedo = true
   forceSelectablePrefab.add(new THREE.Mesh(stem, arrMat))
   forceSelectablePrefab.add(new THREE.Mesh(head, arrMat))
@@ -72,22 +72,32 @@ export function useSceneObjects(
     )
   }
 
+  const undoAble = computed(() => {
+    return currentUndoDepth.value < undoStack.value.length
+  })
+
+  const redoAble = computed(() => {
+    return currentUndoDepth.value > 0
+  })
+
   function undoRedo(undo: boolean) {
-    console.log('undo: ' + undo)
+    console.log('undoable: ' + undoAble.value)
+    console.log('redoable: ' + redoAble.value)
+    console.log('undostacklength: ' + undoStack.value.length)
     recordUndoRedo = false
     if (undo) {
-      if (currentUndoDepth >= undoStack.length) {
+      if (!undoAble.value) {
         recordUndoRedo = true
         return
       }
-      currentUndoDepth++
+      currentUndoDepth.value++
     } else {
-      if (currentUndoDepth === 0) {
+      if (!redoAble.value) {
         recordUndoRedo = true
         return
       }
     }
-    const sceneAction = undoStack[undoStack.length - currentUndoDepth]
+    const sceneAction = undoStack.value[undoStack.value.length - currentUndoDepth.value]
     switch (sceneAction?.type) {
       case 'add':
       case 'remove':
@@ -152,19 +162,19 @@ export function useSceneObjects(
         recordUndoRedo = true
         return
     }
-    if (!undo) currentUndoDepth--
+    if (!undo) currentUndoDepth.value--
     recordUndoRedo = true
   }
 
   function pushUndoAction(action: SceneAction) {
     if (!recordUndoRedo) return
     console.log('pushing to undo stack')
-    if (currentUndoDepth > 0) {
+    if (currentUndoDepth.value > 0) {
       //pop off the end of the stack to the current depth
-      undoStack = undoStack.slice(0, -currentUndoDepth)
-      currentUndoDepth = 0
+      undoStack.value = undoStack.value.slice(0, -currentUndoDepth.value)
+      currentUndoDepth.value = 0
     }
-    undoStack.push(action)
+    undoStack.value.push(action)
   }
 
   //Helper to create a mesh from EditorObject
@@ -685,5 +695,7 @@ export function useSceneObjects(
     undoRedo,
     copySelected,
     pasteCopied,
+    undoAble,
+    redoAble,
   }
 }

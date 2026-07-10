@@ -39,9 +39,21 @@
         @clicked="clickInfo()"
         :image-src="InfoIcon"
       ></IconButton>
-      <IconButton @clicked="$emit('undo')" :image-src="UndoIcon"></IconButton>
-      <IconButton @clicked="$emit('redo')" :image-src="RedoIcon"></IconButton>
-      <IconButton @clicked="$emit('clone')" :image-src="CloneIcon"></IconButton>
+      <IconButton
+        @clicked="$emit('undo')"
+        :image-src="UndoIcon"
+        :enabled="sceneObjects?.undoAble.value"
+      ></IconButton>
+      <IconButton
+        @clicked="$emit('redo')"
+        :image-src="RedoIcon"
+        :enabled="sceneObjects?.redoAble.value"
+      ></IconButton>
+      <IconButton
+        @clicked="$emit('clone')"
+        :image-src="CloneIcon"
+        :enabled="sceneObjects?.selectedId.value !== null"
+      ></IconButton>
       <IconButton @clicked="$emit('update:fullscreen')" :image-src="FullscreenIcon"></IconButton>
     </div>
     <div class="tab-container" v-if="tabOpen">
