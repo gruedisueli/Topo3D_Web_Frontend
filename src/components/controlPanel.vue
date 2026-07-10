@@ -753,7 +753,7 @@ function saveResults() {
   .main-container {
     max-height: none;
     overflow-y: none;
-    transform: scale(0.85);
+    transform: scale(0.6);
     transform-origin: top left;
   }
 }
@@ -762,7 +762,7 @@ function saveResults() {
   .main-container {
     max-height: none;
     overflow-y: none;
-    transform: scale(0.75);
+    transform: scale(0.5);
     transform-origin: top left;
   }
 }
@@ -771,7 +771,7 @@ function saveResults() {
   .main-container {
     max-height: none;
     overflow-y: none;
-    transform: scale(0.6);
+    transform: scale(0.4);
     transform-origin: top left;
   }
 }
@@ -780,7 +780,7 @@ function saveResults() {
   .main-container {
     max-height: none;
     overflow-y: none;
-    transform: scale(0.5);
+    transform: scale(0.4);
     transform-origin: top left;
   }
 }

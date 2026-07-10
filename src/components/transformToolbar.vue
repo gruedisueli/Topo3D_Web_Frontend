@@ -233,7 +233,7 @@ h2 {
   .toolbar {
     max-height: none;
     overflow-y: visible;
-    transform: translateY(-50%) scale(0.85);
+    transform: translateY(-50%) scale(0.6);
     transform-origin: right center;
   }
 }
@@ -242,7 +242,7 @@ h2 {
   .toolbar {
     max-height: none;
     overflow-y: visible;
-    transform: translateY(-50%) scale(0.75);
+    transform: translateY(-50%) scale(0.5);
     transform-origin: right center;
   }
 }
@@ -251,7 +251,7 @@ h2 {
   .toolbar {
     max-height: none;
     overflow-y: visible;
-    transform: translateY(-50%) scale(0.5);
+    transform: translateY(-50%) scale(0.4);
     transform-origin: right center;
   }
 }
