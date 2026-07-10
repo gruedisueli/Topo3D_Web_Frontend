@@ -39,6 +39,11 @@
         :image-src="SphereIcon"
         text="Type = Sphere"
       ></IconButton>
+      <IconButton
+        @clicked="$emit('remove')"
+        :image-src="DeleteIcon"
+        text="Delete Selected"
+      ></IconButton>
     </div>
     <div v-if="isForceSelected" class="sub-toolbar">
       <IconButton
@@ -121,6 +126,7 @@ import CubeIcon from '@/assets/icons/cube.svg'
 import CylinderIcon from '@/assets/icons/cylinder.svg'
 import SphereIcon from '@/assets/icons/sphere.svg'
 import ForceIcon from '@/assets/icons/forces.png'
+import DeleteIcon from '@/assets/icons/delete.svg'
 
 const sceneObjects = inject<ShallowRef<ReturnType<typeof useSceneObjects> | null>>('sceneObjects')
 const selectedCategory = computed(() => {
@@ -128,7 +134,7 @@ const selectedCategory = computed(() => {
     ? sceneObjects?.value?.selectedObj.value?.category
     : 'void'
 })
-const emit = defineEmits(['mode-change', 'force-strength-change'])
+const emit = defineEmits(['mode-change', 'force-strength-change', 'remove'])
 const forceMagnitude = ref(1)
 let ignoreForceWatch = false
 const toolbarVisible = computed(() => {

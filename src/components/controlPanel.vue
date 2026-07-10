@@ -10,9 +10,9 @@
         :image-src="StartStopIcon"
       ></IconButton>
       <IconButton
-        :activated="addRemoveTabOpen"
+        :activated="addTabOpen"
         @clicked="clickAddRemove()"
-        :image-src="AddRemoveIcon"
+        :image-src="AddIcon"
       ></IconButton>
       <IconButton
         :activated="loadTabOpen"
@@ -198,7 +198,7 @@
           />
         </span>
       </div>
-      <div class="tab" v-if="addRemoveTabOpen" @mousedown.stop @click.stop @mousemove.stop>
+      <div class="tab" v-if="addTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <IconButton
           @clicked="add('support')"
           :image-src="SupportIcon"
@@ -209,11 +209,6 @@
           @clicked="add('obstacle')"
           :image-src="ObstacleIcon"
           text="Add Void"
-        ></IconButton>
-        <IconButton
-          @clicked="$emit('remove')"
-          :image-src="DeleteIcon"
-          text="Delete Selected"
         ></IconButton>
       </div>
       <div class="tab" v-if="visibilityTabOpen" @mousedown.stop @click.stop @mousemove.stop>
@@ -300,8 +295,7 @@ import IconButton from './iconButton.vue'
 import SupportIcon from '@/assets/icons/support.svg'
 import ForceIcon from '@/assets/icons/force.svg'
 import ObstacleIcon from '@/assets/icons/obstacle.svg'
-import DeleteIcon from '@/assets/icons/delete.svg'
-import AddRemoveIcon from '@/assets/icons/add-remove.svg'
+import AddIcon from '@/assets/icons/add.svg'
 import AdvancedIcon from '@/assets/icons/gear.svg'
 import VisibilityIcon from '@/assets/icons/eye.svg'
 import InfoIcon from '@/assets/icons/info.svg'
@@ -348,7 +342,6 @@ const emit = defineEmits<{
   (e: 'update:fullscreen'): void
   (e: 'undo'): void
   (e: 'redo'): void
-  (e: 'remove'): void
   (e: 'clone'): void
 }>()
 
@@ -411,7 +404,7 @@ const dimensionsTabOpen = ref(false)
 const loadTabOpen = ref(false)
 const advancedTabOpen = ref(false)
 const infoTabOpen = ref(false)
-const addRemoveTabOpen = ref(false)
+const addTabOpen = ref(false)
 const visibilityTabOpen = ref(false)
 const helpMenuOpen = ref(false)
 const tabStatuses = [
@@ -420,7 +413,7 @@ const tabStatuses = [
   loadTabOpen,
   advancedTabOpen,
   infoTabOpen,
-  addRemoveTabOpen,
+  addTabOpen,
   visibilityTabOpen,
 ]
 
@@ -441,7 +434,7 @@ const tabOpen = computed(() => {
     startStopTabOpen.value ||
     dimensionsTabOpen.value ||
     loadTabOpen.value ||
-    addRemoveTabOpen.value ||
+    addTabOpen.value ||
     advancedTabOpen.value ||
     visibilityTabOpen.value ||
     infoTabOpen.value
@@ -490,8 +483,8 @@ function clickVisibility() {
 }
 
 function clickAddRemove() {
-  closeAllOtherTabs(addRemoveTabOpen)
-  addRemoveTabOpen.value = !addRemoveTabOpen.value
+  closeAllOtherTabs(addTabOpen)
+  addTabOpen.value = !addTabOpen.value
 }
 
 function resetScalingMatrix() {

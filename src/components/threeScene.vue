@@ -26,12 +26,12 @@
       v-model:results-voxel-field-visible="resultsVoxelFieldVisible"
       @undo="undoRedo(true)"
       @redo="undoRedo(false)"
-      @remove="removeSelected()"
       @clone="(copySelected(), pasteCopied())"
     />
     <TransformToolbar
       @mode-change="handleTransformModeChange"
       @force-strength-change="handleForceStrengthChange"
+      @remove="removeSelected()"
     />
     <OrbitHints></OrbitHints>
     <ObjectHint></ObjectHint>
