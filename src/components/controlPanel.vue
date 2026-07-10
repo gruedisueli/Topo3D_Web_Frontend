@@ -73,13 +73,16 @@
             :indeterminate="optimizer?.status.value !== 'running'"
             :status="optimizer?.status.value"
           />
-          <label class="toolbar-label"
-            >Current Change:
-            {{
-              optimizer?.changeVal != null ? Number(optimizer.changeVal.value).toFixed(2) : ''
-            }}</label
+          <label
+            v-if="optimizer?.changeVal.value && optimizer.changeVal.value > 0"
+            class="toolbar-label"
+            >Current Change: {{ Number(optimizer.changeVal.value).toFixed(2) }}</label
           >
-          <label class="toolbar-label">Target Change: 0.01</label>
+          <label
+            v-if="optimizer?.changeVal.value && optimizer.changeVal.value > 0"
+            class="toolbar-label"
+            >Target Change: 0.01</label
+          >
         </div>
         <div class="form-group">
           <button
