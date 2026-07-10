@@ -242,6 +242,7 @@ onMounted(() => {
 
   orbitControls.value = new OrbitControls(camera.value, renderer.value.domElement)
   orbitControls.value.autoRotateSpeed = 0.5
+  orbitControls.value.enableDamping = true
 
   //instantiate composables
   sceneObjects.value = useSceneObjects(scene, camera, renderer, orbitControls, nelx, nely, nelz)
