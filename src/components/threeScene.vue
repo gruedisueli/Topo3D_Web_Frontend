@@ -35,18 +35,19 @@
     />
     <OrbitHints></OrbitHints>
     <ObjectHint></ObjectHint>
+    <LoginMenu></LoginMenu>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, shallowRef, ref, provide, watch } from 'vue'
+import { onMounted, onUnmounted, shallowRef, ref, provide, watch, computed } from 'vue'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/Addons.js'
 import { STLExporter } from 'three/examples/jsm/Addons.js'
 import { useVoxelVisualization } from '@/composables/useVoxelVisualization.ts'
 import { useSceneObjects } from '@/composables/useSceneObjects.ts'
 import { useVoxelization } from '@/composables/useVoxelization.ts'
-import { useOptimization } from '@/composables/useOptimization.ts'
+import { useWebsocket } from '@/composables/useWebsocket.ts'
 import { useResultsVisualization } from '@/composables/useResultsVisualization'
 import { useHover } from '@/composables/useHover.ts'
 import type { SavedScene } from '@/types/scene'
@@ -59,6 +60,7 @@ import { OutlinePass } from 'three/examples/jsm/Addons.js'
 import { OutputPass } from 'three/examples/jsm/Addons.js'
 import ObjectHint from './objectHint.vue'
 import { useMagicKeys, whenever } from '@vueuse/core'
+import LoginMenu from './loginMenu.vue'
 
 const scene = shallowRef<THREE.Scene | null>(null)
 const camera = shallowRef<THREE.PerspectiveCamera | null>(null)
@@ -68,7 +70,7 @@ const outlinePass = shallowRef<OutlinePass | null>(null)
 const orbitControls = shallowRef<OrbitControls | null>(null)
 const pointer = ref(new THREE.Vector2(0, 0))
 const mouseClientPos = ref(new THREE.Vector2(0, 0))
-const optimizer = useOptimization()
+const websocket = useWebsocket()
 const voxelizer = useVoxelization()
 const resultsVisualization = ref<ReturnType<typeof useResultsVisualization> | null>(null)
 const sceneObjects = shallowRef<ReturnType<typeof useSceneObjects> | null>(null)
@@ -159,7 +161,7 @@ provide('registerMouseLeave', registerMouseLeave)
 provide('nelx', nelx)
 provide('nely', nely)
 provide('nelz', nelz)
-provide('optimizer', optimizer)
+provide('websocket', websocket)
 provide('voxelizer', voxelizer)
 provide('voxelVisualization', voxelVisualization)
 provide('sceneObjects', sceneObjects)
@@ -167,6 +169,10 @@ provide('hover', hover)
 provide('userIdle', userIdle)
 
 const containerRef = ref<HTMLDivElement>()
+const sceneEnabled = computed(() => {
+  const s = websocket.status.value
+  return s !== 'disconnected' && s !== 'connecting' && s !== 'busy'
+})
 
 //update function registration
 const updateCallbacks: (() => void)[] = []
@@ -255,10 +261,10 @@ onMounted(() => {
     voxelizer.obstacleMask,
     voxelizer.meshMask,
     voxelizer.forcePoints,
-    optimizer.latestDensityData,
+    websocket.latestDensityData,
     scene,
   )
-  resultsVisualization.value = useResultsVisualization(scene, camera, renderer, optimizer)
+  resultsVisualization.value = useResultsVisualization(scene, camera, renderer, websocket)
   hover.value = useHover(scene, sceneObjects.value.objects, camera, renderer, pointer)
 
   //composer (for outline effects)
@@ -289,6 +295,7 @@ onMounted(() => {
   resetAutoRotateTimer()
   startAutoRotate()
   window.addEventListener('resize', onResize)
+  window.addEventListener('beforeunload', onBeforeUnload)
 })
 
 function onResize() {
@@ -316,11 +323,13 @@ function onResize() {
 
 onUnmounted(() => {
   window.removeEventListener('resize', onResize)
+  window.removeEventListener('beforeunload', onBeforeUnload)
   renderer.value?.dispose()
 })
 
 function onMouseMove(event: MouseEvent) {
   if (!renderer.value) return
+  if (!sceneEnabled.value) return
   mouseClientPos.value = new THREE.Vector2(event.clientX, event.clientY)
   const rect = renderer.value.domElement.getBoundingClientRect()
   pointer.value = new THREE.Vector2(
@@ -359,6 +368,7 @@ function onMouseDown(event: MouseEvent) {
 
 const dragThreshold = 4 //pixels
 function onCanvasClick(event: MouseEvent) {
+  if (!sceneEnabled.value) return
   //filter drag events
   const dx = event.clientX - downPos.value.x
   const dy = event.clientY - downPos.value.y
@@ -400,7 +410,7 @@ async function handleLoadStlScene(sceneData: SavedScene, mesh: THREE.Mesh) {
 }
 
 function basicSceneLoad(sceneData: SavedScene) {
-  optimizer.reset()
+  websocket.reset_cached_data()
   if (!sceneObjects?.value) return
   voxelVisualization.value?.clear()
   resultsVisualization.value?.clear()
@@ -446,11 +456,11 @@ function handleStart(params: Record<string, unknown>) {
   params['obstacles'] = Array.from(mergedObstacleMask as Uint8Array)
   params['forces'] = voxelizer.forcePoints.value ? voxelizer.forcePoints.value : []
   console.log('sending params: ', params)
-  optimizer.connect(params)
+  websocket.optimize(params)
 }
 
 function handleStop() {
-  optimizer.stop()
+  websocket.stop()
 }
 
 // watch(optimizer.status, (currentStatus) => {
@@ -562,6 +572,10 @@ function handleSaveResults() {
 
 function handleUpdateScalingMatrix(matrix: THREE.Matrix4) {
   inverseScalingMatrix = matrix.clone().invert()
+}
+
+function onBeforeUnload() {
+  websocket.disconnect()
 }
 </script>
 

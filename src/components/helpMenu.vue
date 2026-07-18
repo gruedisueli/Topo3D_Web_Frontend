@@ -95,29 +95,14 @@ function renderMediaSrc(src: string): string {
 </script>
 
 <style scoped>
-.credit {
-  text-align: center;
-}
-
 .popup-window {
-  position: absolute;
-  left: 50%;
   top: 100px;
   bottom: 100px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
   width: min(50%, 800px);
-  max-height: calc(100vh - 200px);
-  border-radius: 10px;
-  gap: 8px;
-  background: #333;
-  padding: 12px 12px;
-  box-sizing: border-box;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  z-index: 15;
-  pointer-events: auto;
-  overflow-y: auto;
+}
+
+.credit {
+  text-align: center;
 }
 
 .media-container {

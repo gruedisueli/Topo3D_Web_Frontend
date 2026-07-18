@@ -1,19 +1,19 @@
 import { watch, shallowRef } from 'vue'
 import type { ShallowRef } from 'vue'
 import * as THREE from 'three'
-import { useOptimization } from '@/composables/useOptimization'
+import { useWebsocket } from '@/composables/useWebsocket'
 import { STLLoader } from 'three/examples/jsm/Addons.js'
 
 export function useResultsVisualization(
   scene: ShallowRef<THREE.Scene | null>,
   camera: ShallowRef<THREE.Camera | null>,
   renderer: ShallowRef<THREE.WebGLRenderer | null>,
-  optimizer: ReturnType<typeof useOptimization>,
+  websocket: ReturnType<typeof useWebsocket>,
 ) {
   const material = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide })
   const stlMesh = shallowRef<THREE.Mesh | null>(null)
 
-  watch(optimizer.latestStlData, (stlBuffer) => {
+  watch(websocket.latestStlData, (stlBuffer) => {
     clear()
     if (!stlBuffer || !scene?.value) return
     const geometry = new STLLoader().parse(stlBuffer)

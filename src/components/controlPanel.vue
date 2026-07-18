@@ -63,23 +63,25 @@
         <div
           class="progress-container"
           v-if="
-            optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
+            websocket?.status.value !== 'disconnected' &&
+            websocket?.status.value !== 'connected' &&
+            websocket?.status.value !== 'complete'
           "
         >
           <ProgressBar
             :value="
-              optimizer ? Math.floor((optimizer?.iterationCt.value / user_params.maxloop) * 100) : 0
+              websocket ? Math.floor((websocket?.iterationCt.value / user_params.maxloop) * 100) : 0
             "
-            :indeterminate="optimizer?.status.value !== 'running'"
-            :status="optimizer?.status.value"
+            :indeterminate="websocket?.status.value !== 'running'"
+            :status="websocket?.status.value"
           />
           <label
-            v-if="optimizer?.changeVal.value && optimizer.changeVal.value > 0"
+            v-if="websocket?.changeVal.value && websocket.changeVal.value > 0"
             class="toolbar-label"
-            >Current Change: {{ Number(optimizer.changeVal.value).toFixed(2) }}</label
+            >Current Change: {{ Number(websocket.changeVal.value).toFixed(2) }}</label
           >
           <label
-            v-if="optimizer?.changeVal.value && optimizer.changeVal.value > 0"
+            v-if="websocket?.changeVal.value && websocket.changeVal.value > 0"
             class="toolbar-label"
             >Target Change: 0.01</label
           >
@@ -87,9 +89,9 @@
         <div class="form-group">
           <button
             class="simple-button"
-            v-if="optimizer?.status.value === 'complete'"
+            v-if="websocket?.status.value === 'complete'"
             @click="saveResults"
-            :disabled="optimizer?.status.value !== 'complete'"
+            :disabled="websocket?.status.value !== 'complete'"
           >
             Save Results STL
           </button>
@@ -270,11 +272,11 @@
       </div>
       <div class="tab" v-if="infoTabOpen" @mousedown.stop @click.stop @mousemove.stop>
         <button class="simple-button" @click="openHelpMenu()">Help</button>
-        <p class="info-text">
+        <p class="body-text">
           This is an app for 3D structural topology optimization. You can find more information
           about how to use the app in the help section.
         </p>
-        <p class="info-text">
+        <p class="body-text">
           The frontend of the app is running using Vue.js and Three.js. Here is a link to the
           <a href="https://github.com/gruedisueli/Topo3D_Web_Frontend" target="_blank"
             >frontend repository</a
@@ -288,10 +290,12 @@
           >
           of the
           <a href="https://github.com/jihoonkim888/PyTopo3D" target="_blank">PyTopo3d repository</a
-          >. Your imported STLs are not transmitted to the backend and remain on your machine. Only
-          voxelized data is transmitted.
+          >. Your imported STLs are not transmitted to the backend and remain on your machine. A
+          voxelized version of your model is transmitted and may be stored. Your IP address is
+          anonymized and recorded for usage-tracking and security purposes, and is only retained for
+          a limited time. This tool is for demonstration purposes only.
         </p>
-        <p class="info-text">
+        <p class="body-text">
           You can view more of my work at
           <a href="https://gavinruedisueli.com" target="_blank">gavinruedisueli.com</a>. If you
           would like to contact me, please email me at gavin@gavinruedisueli.com
@@ -305,7 +309,7 @@
 <script setup lang="ts">
 import { reactive, watch, ref, onMounted, computed, inject } from 'vue'
 import type { Ref } from 'vue'
-import { useOptimization } from '@/composables/useOptimization'
+import { useWebsocket } from '@/composables/useWebsocket.ts'
 import { useSceneObjects } from '@/composables/useSceneObjects'
 import type { SavedScene } from '@/types/scene'
 import { STLLoader } from 'three/examples/jsm/Addons.js'
@@ -333,11 +337,15 @@ import CloneIcon from '@/assets/icons/clone.svg'
 const scene = inject<ShallowRef<THREE.Scene | null>>('scene')
 const camera = inject<ShallowRef<THREE.PerspectiveCamera | null>>('camera')
 const renderer = inject<ShallowRef<THREE.WebGLRenderer | null>>('renderer')
-const optimizer = inject<ReturnType<typeof useOptimization> | null>('optimizer')
+const websocket = inject<ReturnType<typeof useWebsocket> | null>('websocket')
 const sceneObjects = inject<Ref<ReturnType<typeof useSceneObjects> | null>>('sceneObjects')
 
 const optimizerRunning = computed(() => {
-  return optimizer?.status.value !== 'disconnected' && optimizer?.status.value !== 'complete'
+  return (
+    websocket?.status.value !== 'disconnected' &&
+    websocket?.status.value !== 'connected' &&
+    websocket?.status.value !== 'complete'
+  )
 })
 
 defineProps<{
@@ -959,14 +967,6 @@ function saveResults() {
   border-top: 5px solid #3498db;
   border-radius: 50%;
   animation: spin 1.5s linear infinite;
-}
-
-.info-text {
-  font-family: 'Segoe UI', Verdana, Geneva, Tahoma, sans-serif;
-  font-size: 12px;
-  font-weight: 400;
-  color: #e0e0e0;
-  letter-spacing: 0.5px;
 }
 
 @keyframes spin {

@@ -11,19 +11,19 @@ const changeVal = ref(0)
 const latestStlData = ref<ArrayBuffer | null>(null)
 let expectingStl = false
 
-export function useOptimization() {
-  function reset() {
+export function useWebsocket() {
+  function reset_cached_data() {
     //reset state
-    error.value = null
-    status.value = 'disconnected'
-    queuePosition.value = null
-    isStarting.value = false
     latestDensityData.value = null
     latestStlData.value = null
+    iterationCt.value = 0
     changeVal.value = 0
+    error.value = null
+    queuePosition.value = null
+    isStarting.value = false
   }
 
-  const connect = (params: Record<string, unknown>) => {
+  const connect = () => {
     //prevent multiple connections
     if (
       ws.value &&
@@ -39,25 +39,26 @@ export function useOptimization() {
       ws.value = null
     }
 
-    reset()
+    reset_cached_data()
 
     status.value = 'connecting'
 
     //open the new connection
-    const isLocal =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ws.value = new WebSocket(isLocal ? 'ws://localhost:8000/ws' : 'wss://gruedi.com/ws')
+    // const isLocal =
+    //   window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ws.value = new WebSocket('wss://ws.gruedi.com/ws') //new WebSocket(isLocal ? 'ws://localhost:8000/ws' : 'wss://ws.gruedi.com/ws')
     ws.value.binaryType = 'arraybuffer'
 
     ws.value.onopen = () => {
       status.value = 'connected'
-      if (ws.value) ws.value.send(JSON.stringify(params))
     }
 
     ws.value.onmessage = (event) => {
       if (typeof event.data === 'string') {
         const msg = JSON.parse(event.data)
-        if (msg.status === 'queued') {
+        if (msg.status === 'busy') {
+          status.value = 'busy'
+        } else if (msg.status === 'queued') {
           queuePosition.value = msg.position
           status.value = 'queued'
         } else if (msg.status === 'starting') {
@@ -72,7 +73,7 @@ export function useOptimization() {
           if (msg.has_stl) {
             expectingStl = true
           } else {
-            ws.value?.close()
+            //ws.value?.close()
           }
         } else if (msg.status === 'change_update') {
           //no need to update reported status
@@ -82,14 +83,14 @@ export function useOptimization() {
           error.value = msg.message
           status.value = 'error'
           iterationCt.value = 0
-          ws.value?.close()
+          //ws.value?.close()
         }
       } else {
         if (expectingStl) {
           const stlArrayBuffer = event.data
           latestStlData.value = stlArrayBuffer
           expectingStl = false
-          ws.value?.close()
+          //ws.value?.close()
         } else {
           //binary data received, should be the density field
           const densityArray = new Uint8Array(event.data)
@@ -106,14 +107,24 @@ export function useOptimization() {
     }
 
     ws.value.onclose = () => {
-      //keep the complete message if it is complete
-      if (status.value !== 'complete') {
-        status.value = 'disconnected'
-      }
+      status.value = 'disconnected'
       queuePosition.value = null
       isStarting.value = false
       ws.value = null
     }
+  }
+
+  const disconnect = () => {
+    ws?.value?.close()
+    status.value = 'disconnected'
+    queuePosition.value = null
+    isStarting.value = false
+    ws.value = null
+  }
+
+  const optimize = (params: Record<string, unknown>) => {
+    reset_cached_data()
+    if (ws.value) ws.value.send(JSON.stringify({ command: 'start', data: params }))
   }
 
   const stop = () => {
@@ -125,7 +136,7 @@ export function useOptimization() {
   }
 
   return {
-    reset,
+    reset_cached_data,
     status,
     queuePosition,
     isStarting,
@@ -136,5 +147,7 @@ export function useOptimization() {
     latestStlData,
     iterationCt,
     changeVal,
+    optimize,
+    disconnect,
   }
 }
